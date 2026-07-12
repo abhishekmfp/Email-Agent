@@ -1,0 +1,103 @@
+# pyproject.toml — Email-Agent
+# Milestone M1: Project Foundation
+# Package manager: uv  |  Runtime: Python 3.11  |  PEP 621 modern packaging
+#
+# Scope guardrails for M1 (from kickoff): no app features, no business logic,
+# no Gmail integration, no agent implementations. This file only establishes the
+# package + the development toolchain. Runtime deps are limited to the one library
+# the entire project's typed-data contract is built on.
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "email-agent"
+version = "0.1.0"
+description = "AI-powered email assistant with human-in-the-loop approval and secure Gmail sending."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [{ name = "Email-Agent contributors" }]
+keywords = ["email", "agent", "ai", "llm"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: MIT License",
+    "Typing :: Typed",
+]
+# Runtime dependencies required for the FOUNDATION only.
+# Everything else (FastAPI, OpenAI SDK, Gmail API client) is deferred to the
+# milestone that actually uses it — see "Deferred dependencies" below.
+dependencies = [
+    # Pydantic v2 — the project's typed-data foundation.
+    # Why now, not later: (1) README lists it as core tech; (2) the M1 foundation
+    # establishes a base settings/config module (env loading, typed config) which
+    # is infrastructure, not business logic; (3) the DONE.html llmops gate requires
+    # "all structured/LLM outputs validated against a schema" — pydantic is the
+    # validator every later milestone (FastAPI models, OpenAI outputs, Gmail
+    # messages) depends on. Pinning it now locks the version the whole tree shares.
+    "pydantic>=2.7",
+]
+
+[project.urls]
+Homepage = "https://github.com/<org>/email-agent"
+Repository = "https://github.com/<org>/email-agent"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/email_agent"]
+
+# ── Development dependency groups (uv-managed, PEP 735) ───────────────────────
+[dependency-groups]
+dev = [
+    # Ruff — one tool for lint + import-sort + format (replaces flake8 + isort +
+    # black). Fast, near-zero config, modern defaults. Foundation needs a single
+    # enforced style from commit #1.
+    "ruff>=0.6",
+    # Mypy — static type checker. Mandated by the DONE.html Definition-of-Done
+    # gate ("TYPECHECK_CMD clean"). Enforces the typing discipline the project
+    # commits to from the first line.
+    "mypy>=1.11",
+    # Pytest — test runner. Mandated by the DoD gate ("TEST_CMD green").
+    "pytest>=8.2",
+    # Coverage plugin — makes the test gate meaningful by measuring branch coverage.
+    "pytest-cov>=5.0",
+]
+
+# ── Tool configuration (repo is configured-for-dev out of the box) ────────────
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+# E/flake8-errors, F/pyflakes, I/isort, UP/pyupgrade, B/bugbear,
+# C4/comprehensions, SIM/simplify, RUF/ruff-specific.
+select = ["E", "F", "I", "UP", "B", "C4", "SIM", "RUF"]
+ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+# Tests are allowed looser style (e.g. B assertions, SIM simplifications).
+"tests/*" = ["B", "SIM"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+disallow_untyped_defs = true
+show_error_codes = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -q"
+# Lets `uv run pytest` find the package without a separate install step during early dev.
+pythonpath = ["src"]
+
+[tool.coverage.run]
+source = ["email_agent"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
