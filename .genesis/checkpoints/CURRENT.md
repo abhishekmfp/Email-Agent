@@ -1,10 +1,12 @@
 # CURRENT
 - active_loop: NONE
-- target: <milestone-id>
-- iteration: 0
+- target: M1
+- iteration: 2
 - last_gate: —
-- last_action: project genesis scaffolded; no milestone started
-- next_action: run G0 existence pre-flight on M1
+- m1_task_1: Project Foundation (pyproject.toml) — DONE
+- m1_task_2: Application Bootstrap (src/email_agent/main.py) — DONE (verified)
+- last_action: M1 Task 2 Application Bootstrap completed & verified
+- next_action: await next task (do not start M2)
 - model: claude-haiku-4-5
 - tokens_used: 0
 - tokens_budget: 50000

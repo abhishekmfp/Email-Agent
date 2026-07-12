@@ -61,4 +61,7 @@ human/visual view; this is the one loops read). Sliced so each milestone ships i
 
 ## Progress (loops append here on milestone completion — newest last)
 
-- _(none yet — first loop fills this)_
+- 2026-07-13 — M1 Task 2 (Application Bootstrap): `src/email_agent/main.py` created. Logs
+  ` Email-Agent started successfully` at INFO, `main()` returns 0. Verified via `py_compile` + run. Status: DONE.
+- 2026-07-13 — M1 Task 1 (Project Foundation): `pyproject.toml` created (uv / PEP 621,
+  Python 3.11, pydantic runtime dep, dev group ruff/mypy/pytest/pytest-cov). Status: DONE.

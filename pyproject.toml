@@ -38,6 +38,11 @@ dependencies = [
     # validator every later milestone (FastAPI models, OpenAI outputs, Gmail
     # messages) depends on. Pinning it now locks the version the whole tree shares.
     "pydantic>=2.7",
+    # pydantic-settings — runtime dependency of the config module
+    # (src/email_agent/config/settings.py). Loads typed config from environment
+    # variables and .env with validation on construction. Native .env support
+    # means python-dotenv is not needed. Required for M1 Project Foundation.
+    "pydantic-settings>=2.3",
 ]
 
 [project.urls]
