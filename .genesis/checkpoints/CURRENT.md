@@ -1,13 +1,15 @@
 # CURRENT
 - active_loop: NONE
-- target: M1
-- iteration: 2
-- last_gate: —
+- target: M2
+- iteration: 0
+- last_gate: L4 (VERIFY) — M1 verdict: APPROVE / VERIFIED
 - m1_task_1: Project Foundation (pyproject.toml) — DONE
-- m1_task_2: Application Bootstrap (src/email_agent/main.py) — DONE (verified)
-- last_action: M1 Task 2 Application Bootstrap completed & verified
-- next_action: await next task (do not start M2)
-- model: claude-haiku-4-5
+- m1_task_2: Application Bootstrap (src/email_agent/main.py) — DONE (verified via run, exit 0)
+- m1_smoke_tests: tests/test_main.py, tests/test_config.py — DONE (9 tests, green)
+- m1_status: VERIFIED (L4 pass: ruff check 0, ruff format 0, mypy strict 0, pytest 0, demo 0, 0 outbound calls)
+- last_action: L4 VERIFY re-run after smoke tests + format fix — all gates green, M1 marked VERIFIED
+- next_action: begin M2 (Domain Model) — Do NOT begin until explicitly approved
+- model: verifier pass (independent)
 - tokens_used: 0
 - tokens_budget: 50000
-- skills_loaded: []
+- skills_loaded: [agentic-swe-master, verify]

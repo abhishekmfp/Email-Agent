@@ -81,8 +81,7 @@ class Settings(BaseSettings):
         normalized = value.strip().lower()
         if normalized not in _ALLOWED_ENVIRONMENTS:
             raise ValueError(
-                f"Invalid environment {value!r}; expected one of "
-                f"{sorted(_ALLOWED_ENVIRONMENTS)}"
+                f"Invalid environment {value!r}; expected one of {sorted(_ALLOWED_ENVIRONMENTS)}"
             )
         return normalized
 

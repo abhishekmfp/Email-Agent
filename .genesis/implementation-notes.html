@@ -16,6 +16,7 @@
   .sub{color:var(--mut);margin:0 0 20px;}
   .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:10px 0;}
   .live{border-left:3px solid var(--ok);}
+  .wip{border-left:3px solid var(--warn);}
   code{background:#1f2630;padding:1px 6px;border-radius:5px;font-size:13px;}
   table{width:100%;border-collapse:collapse;font-size:14px;}
   th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
@@ -33,13 +34,13 @@
   <p class="sub"><b>Rolling source of truth for what is LIVE right now.</b> The wiki can lag; this file
      cannot. Read this on every session start to avoid rebuilding what exists. This is your
      <i>git-like restart point</i>: if context is lost, this file rehydrates you.
-     Last updated: <code>{{TIMESTAMP}}</code> · by loop: <code>{{LOOP_ID}}</code></p>
+     Last updated: <code>2026-07-15</code> · by loop: <code>L4-verify-M1</code></p>
 
   <!-- ───────────── ONE-LINE STATUS ───────────── -->
-  <div class="card live">
-    <b>Now in flight:</b> {{NOW_IN_FLIGHT}}<br>
-    <b>Active loop:</b> {{ACTIVE_LOOP}} · <b>Current milestone:</b> {{MILESTONE_ID}} · <b>Phase:</b> {{PHASE}}<br>
-    <b>Blocked on:</b> {{BLOCKERS}}
+  <div class="card wip">
+    <b>Now in flight:</b> M1 VERIFIED — ready for M2 (Domain Model)<br>
+    <b>Active loop:</b> NONE · <b>Current milestone:</b> M2 (pending approval) · <b>Phase:</b> domain<br>
+    <b>Blocked on:</b> none — M1 closed via L4 VERIFY
   </div>
 
   <!-- ───────────── WHAT'S LIVE ───────────── -->
@@ -48,43 +49,45 @@
     <table>
       <thead><tr><th>Capability</th><th>Where (file/route/symbol)</th><th>Status</th><th>Verified by</th></tr></thead>
       <tbody>
-        <tr><td>{{CAP_1}}</td><td><code>{{LOC_1}}</code></td><td><span class="pill live">live</span></td><td>{{VERIFY_1}}</td></tr>
-        <tr><td>{{CAP_2}}</td><td><code>{{LOC_2}}</code></td><td><span class="pill wip">partial</span></td><td>—</td></tr>
-        <tr><td>add rows as milestones complete…</td><td></td><td></td><td></td></tr>
+        <tr><td>Package + typed config (AppSettings)</td><td><code>src/email_agent/config/settings.py</code></td><td><span class="pill live">live</span></td><td>ruff check, mypy strict, run</td></tr>
+        <tr><td>Bootstrap entry point</td><td><code>src/email_agent/main.py</code> · <code>main()</code></td><td><span class="pill live">live</span></td><td>run → exit 0, prints banner</td></tr>
+        <tr><td>Reproducible env (uv, pyproject)</td><td><code>pyproject.toml</code> · <code>uv.lock</code></td><td><span class="pill live">live</span></td><td><code>uv run</code> resolves</td></tr>
+        <tr><td>Smoke tests (M1 freeze)</td><td><code>tests/test_main.py</code> · <code>tests/test_config.py</code></td><td><span class="pill live">live</span></td><td>pytest 9 passed, exit 0</td></tr>
       </tbody>
     </table>
-    <p class="note">Append a row the moment a milestone passes L4 VERIFY. The grep in G0 checks against this table.</p>
+    <p class="note">L4 VERIFY re-run (2026-07-15): ruff check 0, ruff format 0, mypy strict 0, pytest 0
+       (9 tests), demo 0, 0 outbound calls → <b>M1 VERIFIED</b>. Quiz-me gate: M1 is foundational
+       (no design forks); no open design/edge/impact questions surfaced. M2 pending approval.</p>
   </div>
 
   <!-- ───────────── DECISIONS THAT BIND ───────────── -->
   <h2>Decisions that constrain new work</h2>
   <div class="card">
     <ul>
-      <li><code>{{DECISION_ID}}</code> — {{DECISION_SUMMARY}} → see <code>decisions/{{DECISION_ID}}.md</code></li>
-      <li>add ADR pointers here so future loops don't relitigate settled calls</li>
+      <li><code>decisions-manifest.md</code> — Cognitive Design: LLM = Anthropic (sole provider), HITL mandatory,
+        Autonomy L1, trust zones, secrets never in prompts/logs. → see <code>decisions/decisions-manifest.md</code></li>
+      <li><code>PLAN.md G0.5</code> — Architecture A + lightweight domain state; DraftingService / DeliveryService;
+        concrete adapters (no plugin framework).</li>
+      <li><code>context-graph.json</code> — invariants: domain inward, approval gate, llm validated, outbound timeout,
+        secrets hygiene, artifact identity, state ownership.</li>
     </ul>
   </div>
 
   <!-- ───────────── DEVIATION LOG ───────────── -->
   <h2>Deviations from plan (append-only — the "why we didn't do it the obvious way" log)</h2>
   <div class="card">
-    <p class="note">Append a row whenever the agent couldn't follow approach A and switched to B.
-       This is the institutional memory genesis would otherwise lose silently.
-       Format: date · couldn't use X because Y · used Z instead · invariant impact.</p>
-    <table>
-      <thead><tr><th>Date</th><th>Milestone</th><th>Planned approach</th><th>Actual approach</th><th>Reason</th><th>Invariant impact</th></tr></thead>
-      <tbody>
-        <tr><td colspan="6" style="color:var(--mut);font-style:italic">no deviations yet — append a row when a plan change occurs</td></tr>
-      </tbody>
-    </table>
+    <p class="note">no deviations yet — append a row when a plan change occurs</p>
   </div>
 
   <!-- ───────────── KNOWN GAPS / NEXT ───────────── -->
   <h2>Known gaps &amp; the ordered Next list</h2>
   <div class="card">
     <ol>
-      <li>{{NEXT_1}}</li>
-      <li>{{NEXT_2}}</li>
+      <li><s>Add minimal smoke tests (config defaults/validators + main() returns 0) so <code>pytest</code> is green (exit 0).</s> DONE — 9 tests pass.</li>
+      <li><s>Run <code>uv run ruff format .</code> to fix settings.py format drift.</s> DONE.</li>
+      <li><s>Re-run L4 VERIFY; mark M1 VERIFIED.</s> DONE — all gates green; M1 VERIFIED.</li>
+      <li>Commit dirty <code>uv.lock</code> + new tests to clean the tree (user action).</li>
+      <li>Begin M2 (Domain Model) only after explicit approval.</li>
     </ol>
     <p class="note">Mirror of <code>checkpoints/CURRENT.md → next_action</code>, but human-readable and durable across compaction.</p>
   </div>
@@ -92,7 +95,12 @@
   <!-- ───────────── SESSION LOG (append-only) ───────────── -->
   <h2>Session log (append-only, newest first)</h2>
   <div class="card">
-    <p><code>{{TIMESTAMP}}</code> — {{SESSION_SUMMARY}}</p>
+    <p><code>2026-07-15</code> — M1 L4 VERIFY closure. Added smoke tests (tests/test_main.py,
+       tests/test_config.py — 9 tests) inside the M1 freeze boundary; ran <code>uv run ruff format .</code>
+       (fixed settings.py + test import order). Re-ran L4: ruff check 0, ruff format 0, mypy strict 0,
+       pytest 0 (9 passed), demo 0, 0 outbound calls → all gates green → <b>M1 VERIFIED</b>. CURRENT.md
+       + implementation-notes.html updated. M2 (Domain Model) pending approval; not started. No business-logic
+       tests added; no files outside M1 freeze boundary touched.</p>
     <p class="note">One paragraph per session: what shipped, what broke, what's next. This is the narrative the next cold session reads first.</p>
   </div>
 
