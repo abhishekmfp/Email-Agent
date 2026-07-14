@@ -40,11 +40,39 @@
   <!-- ───────────── THE LOCKED SPEC ───────────── -->
   <h2>1 · The Locked Spec (what we are building)</h2>
   <div class="card locked">
-    <p><b>Cognitive job:</b> {{COGNITIVE_JOB}}</p>
-    <p><b>Inputs:</b> {{INPUTS}} &nbsp;→&nbsp; <b>Outputs:</b> {{OUTPUTS}}</p>
-    <p><b>Autonomy level:</b> {{AUTONOMY}} &nbsp;|&nbsp; <b>Human-in-the-loop points:</b> {{HITL}}</p>
-    <p><b>Failure tolerance:</b> {{FAILURE_TOLERANCE}} &nbsp;|&nbsp; <b>Trust boundary:</b> {{TRUST_BOUNDARY}}</p>
-    <p class="note">Filled during Genesis step G0 (Cognitive Design) via <code>agentic-swe-master</code>.</p>
+    <p><b>Cognitive job:</b> The AI understands human intent and transforms an imprecise
+       natural-language request into a complete, structured, high-quality email draft
+       (recipients, subject, body, tone, purpose) — asking concise clarification when
+       factual info is missing. The LLM performs cognition only; it never decides to send,
+       triggers Gmail, authenticates, enforces rules, or owns workflow state. Those are
+       deterministic application logic.</p>
+    <p><b>Inputs:</b> a single free-text user request per interaction (untrusted, validated
+       &amp; sanitized before the LLM sees it) + optional one-time user profile; startup-time
+       config/credentials (LLM API key, model, Gmail OAuth tokens, app config) from env/secure
+       config — never per-request. &nbsp;→&nbsp; <b>Outputs:</b> a strongly-typed structured
+       draft object (the AI↔app contract) → rendered preview for human approval → after
+       explicit approval, a real Gmail send returning message/thread ID + success response,
+       or a structured error confirming nothing was sent.</p>
+    <p><b>Autonomy level:</b> Level 1 (Assistive AI) — cognitive tasks only, zero operational
+       authority. &nbsp;|&nbsp; <b>Human-in-the-loop points:</b> explicit approval required
+       before EVERY Gmail send (including edited/regenerated/retried drafts); the delivered
+       email must be byte-identical to the approved version; reject/edit supported; LLM can
+       never bypass the approval gate.</p>
+    <p><b>Failure tolerance:</b> Priority Safety &gt; Correctness &gt; Transparency &gt;
+       Reliability &gt; Automation. Wrong recipient / PII / false commitment = catastrophic,
+       prevented by HITL. Transient infra errors: conservative exponential-backoff retries
+       then surface. Uncertain delivery state: report &amp; never auto-resend. Every LLM
+       response schema-validated before the approval workflow; malformed output never
+       presented as approvable.</p>
+    <p><b>Trust boundary:</b> Four zones — External(untrusted) / Application(trusted, owns all
+       side effects) / LLM(restricted-trust, credential-blind) / Gmail(external, reached only
+       post-approval). Prompt-injection→exfiltration is a modeled threat, defended by data
+       minimization (secrets withheld from the LLM) + structural message-role separation +
+       output validation. Recipients are never inferred; the approved recipient list is part
+       of the immutable final draft.</p>
+    <p class="note">Filled during Genesis step G0 (Cognitive Design) via KICKOFF-INTERVIEW.md
+       (resume session, 2026-07-14). Source of truth:
+       <code>decisions/decisions-manifest.md</code>.</p>
   </div>
 
   <!-- ───────────── DEFINITION OF DONE ───────────── -->
