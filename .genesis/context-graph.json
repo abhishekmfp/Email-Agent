@@ -1,11 +1,107 @@
 {
-  "$comment": "Per-project causal/dependency graph. nodes=modules/files, edges=[cause,effect] (cause is imported-by effect), invariants=health rules the L4 verifier checks before declaring done. Regenerate the skeleton with tools/graphizer.mjs; add invariants BY HAND.",
+  "$comment": "Architecture-level context graph for Email-Agent V1, seeded from the approved G0.5 architecture (not derived from Python imports — project is in foundation phase). nodes = major components; edges = dependency direction (cause depends_on effect), dependency direction points inward toward the domain per Clean/Onion. invariants = health rules the L4 verifier enforces. freeze_boundary: src/**.",
   "project": "Email-Agent",
-  "generated": "{{TIMESTAMP}}",
-  "nodes": [],
-  "edges": [],
+  "generated": "2026-07-14",
+  "seed_source": "G0.5 chosen architecture (PLAN.md) + G0 Cognitive Design (decisions/decisions-manifest.md)",
+  "layers": {
+    "interface": ["FastAPIInterface", "CLIInterface"],
+    "application": [
+      "DraftEmailUseCase", "ApproveEmailUseCase",
+      "DraftingService", "DeliveryService"
+    ],
+    "domain": [
+      "EmailDraft", "Approval", "Recipient", "DraftPolicy", "EmailMessage"
+    ],
+    "infrastructure": [
+      "AnthropicAdapter", "GmailAdapter", "AppSettings", "OAuthTokenStore", "DraftValidator"
+    ]
+  },
+  "nodes": [
+    { "id": "FastAPIInterface", "layer": "interface",
+      "role": "HTTP entry point (routes). Delegates to application use cases. Exposes GET /health.",
+      "depends_on": ["DraftEmailUseCase", "ApproveEmailUseCase"] },
+    { "id": "CLIInterface", "layer": "interface",
+      "role": "Local CLI entry point. Delegates to application use cases.",
+      "depends_on": ["DraftEmailUseCase", "ApproveEmailUseCase"] },
+
+    { "id": "DraftEmailUseCase", "layer": "application",
+      "role": "Orchestrates request -> DraftingService -> returns preview in PENDING state. Thin; no business rules.",
+      "depends_on": ["DraftingService", "EmailDraft", "Approval", "DraftPolicy"] },
+    { "id": "ApproveEmailUseCase", "layer": "application",
+      "role": "Handles explicit human approval; only if domain Approval is valid does it convert the approved EmailDraft to an EmailMessage and invoke DeliveryService. Thin.",
+      "depends_on": ["DeliveryService", "EmailDraft", "EmailMessage", "Approval", "DraftPolicy"] },
+
+    { "id": "DraftingService", "layer": "application",
+      "role": "Coordinates request -> AnthropicAdapter -> DraftValidator -> domain validation -> lifecycle transition to AWAIT_APPROVAL.",
+      "depends_on": ["AnthropicAdapter", "DraftValidator", "EmailDraft", "DraftPolicy"] },
+    { "id": "DeliveryService", "layer": "application",
+      "role": "Coordinates the immutable EmailMessage -> GmailAdapter -> send; explicit timeouts + unknown-delivery handling. Only called from APPROVED state.",
+      "depends_on": ["GmailAdapter", "EmailMessage", "Approval"] },
+
+    { "id": "EmailDraft", "layer": "domain",
+      "role": "Core aggregate: recipients, subject, body, tone, purpose, lifecycle state (DRAFTED/AWAIT_APPROVAL/APPROVED/SENT). Guards transitions. Becomes an immutable EmailMessage on approval.",
+      "depends_on": [] },
+    { "id": "Approval", "layer": "domain",
+      "role": "Value object representing explicit human approval. send() legal only from APPROVED state.",
+      "depends_on": [] },
+    { "id": "Recipient", "layer": "domain",
+      "role": "Recipient value object. Never inferred; only explicitly provided/approved addresses. Part of the immutable final draft.",
+      "depends_on": [] },
+    { "id": "DraftPolicy", "layer": "domain",
+      "role": "Business rules: required fields, clarification-required logic, approval validity, recipient resolution rules.",
+      "depends_on": [] },
+    { "id": "EmailMessage", "layer": "domain",
+      "role": "Immutable artifact produced after explicit approval. The approved EmailDraft is converted into an EmailMessage before DeliveryService invokes GmailAdapter. This is the artifact delivered to Gmail.",
+      "depends_on": [] },
+
+    { "id": "AnthropicAdapter", "layer": "infrastructure",
+      "role": "Concrete LLM adapter (Anthropic). Returns structured data only; never sends email, never sees secrets. Explicit timeout. Performs no validation.",
+      "depends_on": [] },
+    { "id": "GmailAdapter", "layer": "infrastructure",
+      "role": "Concrete email adapter (Gmail OAuth). Performs the send of an EmailMessage; only invoked post-approval. Explicit timeout; unknown-state reporting.",
+      "depends_on": ["EmailMessage", "Recipient"] },
+    { "id": "AppSettings", "layer": "infrastructure",
+      "role": "Centralized typed configuration (pydantic-settings). Loads LLM key, model, app config from env; validates on construction.",
+      "depends_on": [] },
+    { "id": "OAuthTokenStore", "layer": "infrastructure",
+      "role": "Isolated credential storage for Gmail OAuth tokens. Secrets never logged/committed/prompted.",
+      "depends_on": [] },
+    { "id": "DraftValidator", "layer": "infrastructure",
+      "role": "Validation at the application/infrastructure boundary. Validates AnthropicAdapter structured output (and external inputs) before the application creates or updates an EmailDraft. Domain keeps business policies; structural validation lives here.",
+      "depends_on": [] }
+  ],
+  "edges": [
+    ["FastAPIInterface", "DraftEmailUseCase"],
+    ["FastAPIInterface", "ApproveEmailUseCase"],
+    ["CLIInterface", "DraftEmailUseCase"],
+    ["CLIInterface", "ApproveEmailUseCase"],
+    ["DraftEmailUseCase", "DraftingService"],
+    ["DraftEmailUseCase", "EmailDraft"],
+    ["DraftEmailUseCase", "Approval"],
+    ["DraftEmailUseCase", "DraftPolicy"],
+    ["ApproveEmailUseCase", "DeliveryService"],
+    ["ApproveEmailUseCase", "EmailDraft"],
+    ["ApproveEmailUseCase", "EmailMessage"],
+    ["ApproveEmailUseCase", "Approval"],
+    ["ApproveEmailUseCase", "DraftPolicy"],
+    ["DraftingService", "AnthropicAdapter"],
+    ["DraftingService", "DraftValidator"],
+    ["DraftingService", "EmailDraft"],
+    ["DraftingService", "DraftPolicy"],
+    ["DeliveryService", "GmailAdapter"],
+    ["DeliveryService", "EmailMessage"],
+    ["DeliveryService", "Approval"],
+    ["GmailAdapter", "EmailMessage"],
+    ["GmailAdapter", "Recipient"]
+  ],
   "invariants": {
-    "$example_node": "Plain-English health rule, e.g. 'API latency < 200ms' or 'domain layer imports no framework'."
+    "domain_inward": "Domain layer (EmailDraft, Approval, Recipient, DraftPolicy, EmailMessage) imports no infrastructure and no framework (no FastAPI, no Anthropic SDK, no Gmail SDK). Dependency direction is always inward.",
+    "approval_gate": "No email reaches Gmail without an explicit deterministic Approval in the APPROVED state. GmailAdapter is only invoked from DeliveryService, which is only called by ApproveEmailUseCase after Approval is valid.",
+    "llm_output_validated": "AnthropicAdapter returns structured data only. DraftValidator (application/infrastructure boundary) validates every LLM output before the application creates or updates an EmailDraft.",
+    "outbound_timeout": "Every outbound network call (AnthropicAdapter, GmailAdapter) has an explicit timeout value.",
+    "secrets_hygiene": "Secrets (LLM key, OAuth tokens) never enter prompts and never enter logs. Secrets are withheld from the LLM by data minimization.",
+    "artifact_identity": "The delivered artifact (EmailMessage) must be identical to the explicitly approved artifact. The email delivered to Gmail is byte-identical to the version the human approved.",
+    "state_ownership": "Application owns workflow state. The LLM owns no application state — it produces structured data only and never transitions, approves, or persists draft state."
   },
   "freeze_boundary": [
     "$comment: globs the driver may edit; everything else is off-limits without explicit user request",
