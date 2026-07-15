@@ -38,9 +38,9 @@
 
   <!-- ───────────── ONE-LINE STATUS ───────────── -->
   <div class="card wip">
-    <b>Now in flight:</b> M1 VERIFIED — ready for M2 (Domain Model)<br>
-    <b>Active loop:</b> NONE · <b>Current milestone:</b> M2 (pending approval) · <b>Phase:</b> domain<br>
-    <b>Blocked on:</b> none — M1 closed via L4 VERIFY
+    <b>Now in flight:</b> M2 VERIFIED — Domain Model complete; ready for M3 (Anthropic Drafting)<br>
+    <b>Active loop:</b> NONE · <b>Current milestone:</b> M3 (pending approval) · <b>Phase:</b> integration (LLM)<br>
+    <b>Blocked on:</b> none — M2 closed via L4 VERIFY (quiz-me: design/invariants/stability all confirmed)
   </div>
 
   <!-- ───────────── WHAT'S LIVE ───────────── -->
@@ -53,11 +53,16 @@
         <tr><td>Bootstrap entry point</td><td><code>src/email_agent/main.py</code> · <code>main()</code></td><td><span class="pill live">live</span></td><td>run → exit 0, prints banner</td></tr>
         <tr><td>Reproducible env (uv, pyproject)</td><td><code>pyproject.toml</code> · <code>uv.lock</code></td><td><span class="pill live">live</span></td><td><code>uv run</code> resolves</td></tr>
         <tr><td>Smoke tests (M1 freeze)</td><td><code>tests/test_main.py</code> · <code>tests/test_config.py</code></td><td><span class="pill live">live</span></td><td>pytest 9 passed, exit 0</td></tr>
+        <tr><td>Domain layer (M2)</td><td><code>src/email_agent/domain/**</code></td><td><span class="pill live">live</span></td><td>ruff/mypy/pytest green, 99% cov</td></tr>
+        <tr><td>Domain tests (M2)</td><td><code>tests/domain/test_domain.py</code></td><td><span class="pill live">live</span></td><td>43 passed</td></tr>
       </tbody>
     </table>
-    <p class="note">L4 VERIFY re-run (2026-07-15): ruff check 0, ruff format 0, mypy strict 0, pytest 0
-       (9 tests), demo 0, 0 outbound calls → <b>M1 VERIFIED</b>. Quiz-me gate: M1 is foundational
-       (no design forks); no open design/edge/impact questions surfaced. M2 pending approval.</p>
+    <p class="note">M2 L4 VERIFY passed (2026-07-15): ruff 0, ruff-format 0, mypy strict 0,
+       pytest 0 (43 tests), domain coverage 99%. Quiz-me (design / invariants a-b-c / cross-milestone
+       stability) all confirmed by user → <b>M2 VERIFIED</b>. Evolution items accepted (not blockers):
+       RFC validation→infra, persistent approval identity, mandatory decided_at on audit, cleaner mypy
+       narrowing. M3 (Anthropic Drafting) pending approval; not begun. Domain layer stdlib-only,
+       no framework/provider leakage.</p>
   </div>
 
   <!-- ───────────── DECISIONS THAT BIND ───────────── -->
@@ -95,12 +100,11 @@
   <!-- ───────────── SESSION LOG (append-only) ───────────── -->
   <h2>Session log (append-only, newest first)</h2>
   <div class="card">
-    <p><code>2026-07-15</code> — M1 L4 VERIFY closure. Added smoke tests (tests/test_main.py,
-       tests/test_config.py — 9 tests) inside the M1 freeze boundary; ran <code>uv run ruff format .</code>
-       (fixed settings.py + test import order). Re-ran L4: ruff check 0, ruff format 0, mypy strict 0,
-       pytest 0 (9 passed), demo 0, 0 outbound calls → all gates green → <b>M1 VERIFIED</b>. CURRENT.md
-       + implementation-notes.html updated. M2 (Domain Model) pending approval; not started. No business-logic
-       tests added; no files outside M1 freeze boundary touched.</p>
+    <p><code>2026-07-15</code> — M2 L4 VERIFY passed. Re-ran gates (all green): ruff check 0,
+       ruff format 0, mypy strict 0, pytest 0 (43 passed), domain cov 99%. Quiz-me segment: Q1 design
+       match (confirmed via earlier review approval), Q2 invariants a/b/c enforced (confirmed), Q3
+       cross-milestone stability low risk (confirmed) → <b>M2 VERIFIED</b>. Evolution items recorded as
+       non-blockers. CURRENT.md + this file + DONE.html updated. M3 pending approval; not begun.</p>
     <p class="note">One paragraph per session: what shipped, what broke, what's next. This is the narrative the next cold session reads first.</p>
   </div>
 

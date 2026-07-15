@@ -1,15 +1,16 @@
 # CURRENT
 - active_loop: NONE
-- target: M2
+- target: M3
 - iteration: 0
-- last_gate: L4 (VERIFY) — M1 verdict: APPROVE / VERIFIED
-- m1_task_1: Project Foundation (pyproject.toml) — DONE
-- m1_task_2: Application Bootstrap (src/email_agent/main.py) — DONE (verified via run, exit 0)
-- m1_smoke_tests: tests/test_main.py, tests/test_config.py — DONE (9 tests, green)
-- m1_status: VERIFIED (L4 pass: ruff check 0, ruff format 0, mypy strict 0, pytest 0, demo 0, 0 outbound calls)
-- last_action: L4 VERIFY re-run after smoke tests + format fix — all gates green, M1 marked VERIFIED
-- next_action: begin M2 (Domain Model) — Do NOT begin until explicitly approved
-- model: verifier pass (independent)
+- last_gate: L4 (VERIFY) — M2 verdict: APPROVE / VERIFIED
+- m1_status: VERIFIED (L4 pass)
+- m2_status: VERIFIED (L4 pass)
+- m2_l4_quiz: design=match, invariants(a/b/c)=enforced, cross-milestone risk=low
+- m2_artifacts: EmailDraft, EmailMessage, Recipient, Approval, DraftPolicy, ApprovalPolicy, DraftState, DomainError+
+- m2_evo_items: RFC email validation→infra; approval identity may become persistent; decided_at may become mandatory on audit; drop mypy type-ignore if cleaner narrowing found
+- last_action: M2 L4 VERIFY passed (ruff 0, ruff-format 0, mypy strict 0, pytest 0/43, domain cov 99%); marked VERIFIED
+- next_action: await approval to begin M3 (Anthropic Drafting) — do NOT begin M3 until approved
+- model: builder
 - tokens_used: 0
 - tokens_budget: 50000
-- skills_loaded: [agentic-swe-master, verify]
+- skills_loaded: [agentic-swe-master, coding-orchestrator, modular-architecture]
