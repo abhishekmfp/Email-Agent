@@ -1,15 +1,17 @@
 # CURRENT
 - active_loop: NONE
-- target: M3
+- target: M4
 - iteration: 0
-- last_gate: L4 (VERIFY) — M2 verdict: APPROVE / VERIFIED
+- last_gate: L4 (VERIFY) — M3 verdict: APPROVE / VERIFIED
 - m1_status: VERIFIED (L4 pass)
 - m2_status: VERIFIED (L4 pass)
-- m2_l4_quiz: design=match, invariants(a/b/c)=enforced, cross-milestone risk=low
-- m2_artifacts: EmailDraft, EmailMessage, Recipient, Approval, DraftPolicy, ApprovalPolicy, DraftState, DomainError+
+- m3_status: VERIFIED (L4 pass)
+- m3_l4_quiz: design=PromptBuilder+DraftResponse separation, invariants(5)=enforced, change-impact=additive/backward-compatible
+- m3_artifacts: AnthropicAdapter, DraftResponse, DraftResponseValidator, PromptBuilder, DraftingService, DraftEmailUseCase, DraftRequest/DraftResult, AnthropicSettings; anthropic==0.116.0 pinned
+- m3_evo_items: (locked ADRs 1-7 in checkpoints/M3.md — carry forward verbatim as M4+ freeze constraints)
 - m2_evo_items: RFC email validation→infra; approval identity may become persistent; decided_at may become mandatory on audit; drop mypy type-ignore if cleaner narrowing found
-- last_action: M2 L4 VERIFY passed (ruff 0, ruff-format 0, mypy strict 0, pytest 0/43, domain cov 99%); marked VERIFIED
-- next_action: await approval to begin M3 (Anthropic Drafting) — do NOT begin M3 until approved
+- last_action: M3 L4 VERIFY passed (ruff 0, ruff-format 0, mypy strict 0, pytest 75 passed full / 21 on M3 path, app cov 94-100%, infra cov 100%, overall 98%); marked VERIFIED
+- next_action: await approval to begin M4 (Approval & EmailMessage) — do NOT begin M4 until approved
 - model: builder
 - tokens_used: 0
 - tokens_budget: 50000

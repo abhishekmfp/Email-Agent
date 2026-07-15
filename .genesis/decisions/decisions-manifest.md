@@ -329,6 +329,40 @@ only when a second provider is added.
 
 ---
 
+---
+
+## M3 Anthropic Drafting — Locked ADRs (accepted 2026-07-15)
+
+These 7 ADRs were ratified during the M3 design interview and MUST be honored by
+M4–M8 unchanged. They are freeze constraints, not open questions.
+
+1. **AnthropicSettings placement.** Added to the *existing* config system
+   (`config/settings.py` as a section of `Settings` via `default_factory`), NOT a
+   new standalone config module.
+2. **Dependency pin.** `anthropic==0.116.0` added to `pyproject.toml` and
+   `uv.lock` regenerated. V1 standardizes on Anthropic as the sole LLM provider
+   (see Architecture Decision above); no generic plugin abstraction in V1.
+3. **Typed boundary contract.** `AnthropicAdapter` returns a typed `DraftResponse`
+   (pydantic) object — never raw dicts. `DraftResponse` is validated by
+   `DraftResponseValidator` BEFORE any `EmailDraft` is created
+   (llm_output_validated invariant).
+4. **Validator naming.** The boundary validator is named `DraftResponseValidator`
+   (renamed from the originally-planned `DraftValidator`) to make clear it validates
+   the typed boundary object, distinct from domain `DraftPolicy` business rules.
+5. **Retry ownership.** Retry policy lives in `DraftingService`, NOT in
+   `AnthropicAdapter`. The adapter performs exactly ONE outbound request per call.
+6. **Prompt extraction.** Prompt construction is extracted into a dedicated
+   `PromptBuilder` helper, NOT embedded in `AnthropicAdapter`.
+7. **Domain LLM-agnosticism.** The Domain layer stays completely unaware an LLM
+   exists (domain_inward invariant) — zero domain imports of infrastructure/SDK.
+
+M3 verification: L4 VERIFY verdict APPROVE (separate fresh-context reviewer),
+7 ADRs PASS, 5 context-graph invariants PASS, scope guard PASS (no Gmail/Approval/
+send leaked), gates green (ruff 0, ruff-format 0, mypy strict 0, pytest 75 passed
+full / 21 on M3 path; app cov 94–100%, infra cov 100%, overall 98%).
+
+---
+
 ## Assumptions the agent inferred from the interview (not stated verbatim)
 
 - V1 is a single-process local application; the FastAPI service is for local/programmatic

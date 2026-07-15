@@ -25,6 +25,45 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 _ALLOWED_ENVIRONMENTS = frozenset({"development", "staging", "production", "test"})
 
 
+class AnthropicSettings(BaseSettings):
+    """Anthropic LLM provider configuration (Milestone M3).
+
+    Isolated behind its own ``ANTHROPIC_`` env prefix so it composes cleanly
+    with the generic app settings and any future provider sections. The API
+    key is loaded from the environment only — it is never constructed, logged,
+    or interpolated into a prompt by application code.
+
+    Design note (secrets_hygiene invariant): the API key is a simple ``str``
+    here. Application code must treat it as a secret: pass it to the adapter via
+    constructor, withhold it from the LLM prompt, and never emit it in logs or
+    errors.
+    """
+
+    model_config = SettingsConfigDict(
+        env_prefix="ANTHROPIC_",
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",
+    )
+
+    api_key: str = Field(
+        default="",
+        description="Anthropic API key. Loaded from ANTHROPIC_API_KEY; empty by default "
+        "(tests/mocked runs do not require a real key).",
+    )
+    model: str = Field(
+        default="claude-3-5-haiku-latest",
+        description="Anthropic model id used for draft generation.",
+    )
+    request_timeout_seconds: float = Field(
+        default=30.0,
+        gt=0,
+        description="Hard timeout (seconds) for a single Anthropic request. Enforces the "
+        "outbound_timeout invariant.",
+    )
+
+
 class Settings(BaseSettings):
     """Generic application settings.
 
@@ -57,6 +96,11 @@ class Settings(BaseSettings):
         default="development",
         description="Deployment environment: development, staging, production, test.",
     )
+
+    #: Provider section. Composed lazily (factory) so env vars are read at
+    #: construction time, not at class-definition import time — this keeps the
+    #: config testable and avoids surprising reads during import.
+    anthropic: AnthropicSettings = Field(default_factory=AnthropicSettings)
 
     @field_validator("log_level")
     @classmethod

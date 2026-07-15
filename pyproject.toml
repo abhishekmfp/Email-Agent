@@ -30,6 +30,7 @@ classifiers = [
 # Everything else (FastAPI, OpenAI SDK, Gmail API client) is deferred to the
 # milestone that actually uses it — see "Deferred dependencies" below.
 dependencies = [
+    "anthropic>=0.116.0",
     # Pydantic v2 — the project's typed-data foundation.
     # Why now, not later: (1) README lists it as core tech; (2) the M1 foundation
     # establishes a base settings/config module (env loading, typed config) which

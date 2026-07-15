@@ -8,6 +8,10 @@ accessor. Import from this package rather than the submodule::
 
 from __future__ import annotations
 
-from email_agent.config.settings import Settings, get_settings
+from email_agent.config.settings import (
+    AnthropicSettings,
+    Settings,
+    get_settings,
+)
 
-__all__ = ["Settings", "get_settings"]
+__all__ = ["AnthropicSettings", "Settings", "get_settings"]
