@@ -10,8 +10,9 @@ from __future__ import annotations
 
 from email_agent.config.settings import (
     AnthropicSettings,
+    GmailSettings,
     Settings,
     get_settings,
 )
 
-__all__ = ["AnthropicSettings", "Settings", "get_settings"]
+__all__ = ["AnthropicSettings", "GmailSettings", "Settings", "get_settings"]

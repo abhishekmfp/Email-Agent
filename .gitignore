@@ -11,6 +11,11 @@ __pycache__/
 # Environment variables
 .env
 
+# OAuth token stores (never commit credential material)
+oauth_tokens.json
+*oauth_tokens.json
+.email-agent/
+
 # IDE
 .vscode/
 .idea/

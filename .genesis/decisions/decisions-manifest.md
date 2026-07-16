@@ -394,6 +394,61 @@ honored by M5–M8 unchanged. They are freeze constraints.
   recreate or derive an `EmailMessage` from the (possibly edited) draft.
   `DeliveryService` is transport only (read-only over the `EmailMessage`).
 
+---
+
+## M5 Gmail OAuth Authentication — Locked Decisions (accepted 2026-07-17)
+
+These decisions were ratified during the M5 architecture review and the L4
+verification close-out, and MUST be honored by M6–M8 unchanged. Freeze constraints.
+
+### Architecture decisions (D1–D7)
+- **D1 (Libraries):** use `google-auth-oauthlib` + `google-auth` for OAuth.
+- **D2 (Client type):** PKCE public client — NO client secret configured or stored.
+      A desktop binary is user-controlled; an embedded secret is recoverable by
+      reverse engineering and therefore not confidential. PKCE removes the need to
+      trust a secret. An extracted secret grants no live Gmail/token access — only
+      potential impersonation of the app's OAuth identity. User access is protected
+      by the user's auth + consent + issued tokens, separate from client identity.
+- **D3 (Token storage):** tokens stored OUTSIDE the repo at a caller-supplied path
+      with 0600 permissions; file gitignored (oauth_tokens.json / .email-agent/).
+      Token bytes are never logged.
+- **D4 (Scope):** request ONLY `https://www.googleapis.com/auth/gmail.send`
+      (single consent at M5; used by M6 send).
+- **D5/D7 (Complete flow in M5):** `GoogleOAuthClient.authenticate()` runs the FULL
+      interactive flow (browser launch + loopback callback + code capture) and ends
+      with valid stored credentials. M6 begins from those credentials and implements
+      delivery only.
+- **D6 (Settings):** `GmailSettings` section of the existing `Settings` hierarchy
+      (GMAIL_ prefix, lazy default_factory) — mirrors M3 ADR-1 pattern.
+- (D7 also restated as M5→M6 ordering: auth-complete-before-delivery; no
+  DeliveryService/send in M5.)
+
+### Extra engineering decisions (X1–X3) — M6 carry-forward constraints
+- **X1 (has_valid_tokens):** `OAuthTokenStore` exposes `has_valid_tokens()`.
+- **X2 (OAuth client ownership):** a dedicated `GoogleOAuthClient` owns ALL OAuth
+      operations. Gmail *delivery* is a separate M6 concern — no `gmail_adapter.py`
+      send surface in M5.
+- **X3 (auth before delivery):** authentication completes before Delivery exists;
+      M5 ships no DeliveryService/send path.
+
+### M5 → M6 contract (frozen)
+- M6 `DeliveryService` MUST call `refresh_if_needed()` before every Gmail API request.
+- Merely-expired access token → refreshed transparently, no interactive re-auth.
+- `refresh_if_needed()` / `refresh_access_token()` raising `TokenRefreshError`
+  (e.g. revoked refresh token) → store cleared; M6 HARD STOPS, surfaces the auth
+  failure, requires re-authentication, then retries delivery of the SAME immutable
+  EmailMessage. Never deliver on a stale/expired token; never silently retry; never
+  rebuild the message from the draft (preserves M4-E4 artifact_identity).
+- `outbound_timeout` must hold on the refresh path: the token-endpoint POST is
+  wrapped so `creds.refresh()` carries `request_timeout_seconds` (added post-L4 to
+  fix an initial REJECT).
+
+M5 verification: L4 VERIFY verdict APPROVE after one fix (refresh timeout). 8 decision
+checks PASS, 5 context-graph invariants PASS, scope guard PASS (no send/DeliveryService
+in M5). Gates green (ruff 0, ruff-format 0, mypy strict 0 for 27 files, pytest 33
+passed / 1 skipped win32; infra cov 84–88%, overall 95%).
+
+---
 
 ## Assumptions the agent inferred from the interview (not stated verbatim)
 

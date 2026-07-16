@@ -11,6 +11,9 @@ from .anthropic_adapter import AnthropicAdapter
 from .draft_response import DraftResponse
 from .draft_response_validator import DraftResponseValidator
 from .errors import AnthropicProviderError, DraftResponseValidationError
+from .gmail_errors import OAuthError, TokenRefreshError
+from .google_oauth_client import GoogleOAuthClient
+from .oauth_token_store import OAuthTokens, OAuthTokenStore
 from .prompt_builder import DraftPrompt, PromptBuilder
 
 __all__ = [
@@ -20,5 +23,10 @@ __all__ = [
     "DraftResponse",
     "DraftResponseValidationError",
     "DraftResponseValidator",
+    "GoogleOAuthClient",
+    "OAuthError",
+    "OAuthTokenStore",
+    "OAuthTokens",
     "PromptBuilder",
+    "TokenRefreshError",
 ]

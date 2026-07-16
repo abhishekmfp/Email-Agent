@@ -64,6 +64,59 @@ class AnthropicSettings(BaseSettings):
     )
 
 
+class GmailSettings(BaseSettings):
+    """Gmail OAuth configuration (Milestone M5).
+
+    Isolated behind its own ``GMAIL_`` env prefix (mirrors the M3
+    ``AnthropicSettings`` pattern) so it composes cleanly with the generic app
+    settings. Only the public-client identifiers are configured here — there is
+    no client secret, because V1 uses the PKCE "Desktop app" flow and the secret
+    would otherwise be shipped in a local binary.
+
+    Design note (secrets_hygiene invariant): the OAuth *tokens* are NOT config —
+    they are runtime secrets managed by ``OAuthTokenStore`` and stored outside the
+    repo at 0600 perms. This section holds only the client id + static endpoints.
+    """
+
+    model_config = SettingsConfigDict(
+        env_prefix="GMAIL_",
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",
+    )
+
+    client_id: str = Field(
+        default="",
+        description="Google OAuth client id (Desktop app). Loaded from GMAIL_CLIENT_ID; "
+        "empty by default (tests/mocked runs do not require a real id).",
+    )
+    # No client_secret: PKCE public client (M5 decision D2).
+    auth_uri: str = Field(
+        default="https://accounts.google.com/o/oauth2/v2/auth",
+        description="Google authorization endpoint.",
+    )
+    token_uri: str = Field(
+        default="https://oauth2.googleapis.com/token",
+        description="Google token endpoint (code exchange + refresh).",
+    )
+    redirect_uri: str = Field(
+        default="http://localhost:8080/",
+        description="Loopback redirect URI used by the interactive OAuth flow.",
+    )
+    scopes: str = Field(
+        default="https://www.googleapis.com/auth/gmail.send",
+        description="Space-separated Gmail scopes requested at consent. M5 requests only "
+        "gmail.send (decision D4); delivery itself is M6.",
+    )
+    request_timeout_seconds: float = Field(
+        default=30.0,
+        gt=0,
+        description="Hard timeout (seconds) for a single token-endpoint request. Enforces "
+        "the outbound_timeout invariant.",
+    )
+
+
 class Settings(BaseSettings):
     """Generic application settings.
 
@@ -101,6 +154,7 @@ class Settings(BaseSettings):
     #: construction time, not at class-definition import time — this keeps the
     #: config testable and avoids surprising reads during import.
     anthropic: AnthropicSettings = Field(default_factory=AnthropicSettings)
+    gmail: GmailSettings = Field(default_factory=GmailSettings)
 
     @field_validator("log_level")
     @classmethod

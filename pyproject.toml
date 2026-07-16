@@ -38,6 +38,7 @@ dependencies = [
     # "all structured/LLM outputs validated against a schema" — pydantic is the
     # validator every later milestone (FastAPI models, OpenAI outputs, Gmail
     # messages) depends on. Pinning it now locks the version the whole tree shares.
+    "google-auth-oauthlib>=1.4.0",
     "pydantic>=2.7",
     # pydantic-settings — runtime dependency of the config module
     # (src/email_agent/config/settings.py). Loads typed config from environment
