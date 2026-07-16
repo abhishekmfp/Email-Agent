@@ -363,6 +363,38 @@ full / 21 on M3 path; app cov 94–100%, infra cov 100%, overall 98%).
 
 ---
 
+---
+
+## M4 Approval & EmailMessage — Locked Decisions (accepted 2026-07-16)
+
+These decisions were ratified during the M4 architecture review and MUST be
+honored by M5–M8 unchanged. They are freeze constraints.
+
+### Architecture decisions (D1–D4)
+- **D1 (Regenerate owner):** Option A — regenerate handled by `DraftEmailUseCase`
+  (interface re-invokes it). `ApproveEmailUseCase` stays LLM-free.
+- **D2 (Name):** Keep `ApproveEmailUseCase` (matches locked context-graph/PLAN node).
+- **D3 (Preview):** Render previews directly from `EmailDraft`; do NOT introduce a
+  `Preview` model.
+- **D4 (Command shape):** V1 keeps a single `ApprovalDecision` dataclass with
+  optional edit fields. Evolution toward explicit command objects is a future ADR
+  candidate if command complexity grows.
+
+### Engineering decisions (E1–E4) — M6 carry-forward constraints
+- **E1 (sole Approval constructor):** ONLY `ApproveEmailUseCase` may construct the
+  domain `Approval` object. No interface/other application code builds `Approval`.
+  Approval is a business operation owned by the application layer.
+- **E2 (LLM-free use case):** `ApproveEmailUseCase` must never import
+  `AnthropicAdapter`, `DraftingService`, or any LLM SDK.
+- **E3 (single EmailMessage creation):** `EmailMessage` is created exactly ONCE, at
+  APPROVE, inside `ApproveEmailUseCase` via `approved.to_message()`; it is frozen;
+  later edits to the original draft MUST NOT change it.
+- **E4 (artifact_identity → M6 contract):** `M6 DeliveryService` must deliver the
+  exact `EmailMessage` instance produced by `ApproveEmailUseCase` — it must NEVER
+  recreate or derive an `EmailMessage` from the (possibly edited) draft.
+  `DeliveryService` is transport only (read-only over the `EmailMessage`).
+
+
 ## Assumptions the agent inferred from the interview (not stated verbatim)
 
 - V1 is a single-process local application; the FastAPI service is for local/programmatic

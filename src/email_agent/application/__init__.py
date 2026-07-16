@@ -11,11 +11,17 @@ domain or infrastructure layers (domain_inward invariant).
 
 from __future__ import annotations
 
+from .approval_request import ApprovalDecision, ApprovalResult, ApprovalStatus
+from .approve_email_use_case import ApproveEmailUseCase
 from .draft_email_use_case import DraftEmailUseCase
 from .draft_request import DraftRequest, DraftResult, DraftStatus
 from .drafting_service import DraftingService
 
 __all__ = [
+    "ApprovalDecision",
+    "ApprovalResult",
+    "ApprovalStatus",
+    "ApproveEmailUseCase",
     "DraftEmailUseCase",
     "DraftRequest",
     "DraftResult",
