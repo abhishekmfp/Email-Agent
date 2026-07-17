@@ -102,9 +102,17 @@ def test_send_auth_failed_maps_to_auth_required(fake_container, monkeypatch):
     # Local fake delivery that reports auth_failed (no real Gmail).
     class _FakeDeliver:
         def send(self, message):
-            return type("R", (), {"success": False, "status": "auth_failed",
-                                  "error": "OAuth token refresh failed", "message_id": None,
-                                  "thread_id": None})()
+            return type(
+                "R",
+                (),
+                {
+                    "success": False,
+                    "status": "auth_failed",
+                    "error": "OAuth token refresh failed",
+                    "message_id": None,
+                    "thread_id": None,
+                },
+            )()
 
     import dataclasses
 
@@ -138,14 +146,18 @@ def test_no_review_or_approve_endpoints(fake_container):
 # ── Branch coverage for the real error paths ──────────────────────────────────
 class _ClarificationDrafting:
     def draft(self, request):
-        return type("R", (), {
-            "status": DraftStatus.CLARIFICATION_REQUIRED,
-            "draft": None,
-            "preview": None,
-            "error": "missing recipient email",
-            "clarification_question": "Who should receive this email?",
-            "missing_fields": ["recipients"],
-        })()
+        return type(
+            "R",
+            (),
+            {
+                "status": DraftStatus.CLARIFICATION_REQUIRED,
+                "draft": None,
+                "preview": None,
+                "error": "missing recipient email",
+                "clarification_question": "Who should receive this email?",
+                "missing_fields": ["recipients"],
+            },
+        )()
 
 
 def test_draft_clarification_branch(fake_container, monkeypatch):

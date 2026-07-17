@@ -66,26 +66,62 @@ class _DeliverOK:
 
     def send(self, message):
         self.last_message = message
-        return type("R", (), {"success": True, "status": "delivered",
-                              "error": None, "message_id": "msg-1", "thread_id": "th-1"})()
+        return type(
+            "R",
+            (),
+            {
+                "success": True,
+                "status": "delivered",
+                "error": None,
+                "message_id": "msg-1",
+                "thread_id": "th-1",
+            },
+        )()
 
 
 class _DeliverAuthFailed:
     def send(self, message):
-        return type("R", (), {"success": False, "status": "auth_failed",
-                              "error": "refresh failed", "message_id": None, "thread_id": None})()
+        return type(
+            "R",
+            (),
+            {
+                "success": False,
+                "status": "auth_failed",
+                "error": "refresh failed",
+                "message_id": None,
+                "thread_id": None,
+            },
+        )()
 
 
 class _DeliverUnknown:
     def send(self, message):
-        return type("R", (), {"success": False, "status": "unknown_state",
-                              "error": "200/UNKNOWN", "message_id": None, "thread_id": None})()
+        return type(
+            "R",
+            (),
+            {
+                "success": False,
+                "status": "unknown_state",
+                "error": "200/UNKNOWN",
+                "message_id": None,
+                "thread_id": None,
+            },
+        )()
 
 
 class _DeliverNotApproved:
     def send(self, message):
-        return type("R", (), {"success": False, "status": "not_approved",
-                              "error": "no approval", "message_id": None, "thread_id": None})()
+        return type(
+            "R",
+            (),
+            {
+                "success": False,
+                "status": "not_approved",
+                "error": "no approval",
+                "message_id": None,
+                "thread_id": None,
+            },
+        )()
 
 
 def _decision() -> ApprovalDecision:

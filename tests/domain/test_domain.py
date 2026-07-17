@@ -113,6 +113,19 @@ def test_draftpolicy_is_complete_false_when_empty_subject() -> None:
     assert DraftPolicy.is_complete(d) is False
 
 
+def test_draftpolicy_is_complete_false_when_whitespace_body() -> None:
+    # Whitespace-only body is not a valid body (the strip() guard at
+    # policies.py:45 must raise). Covers the last untested domain branch.
+    d = EmailDraft.create(
+        recipients=[Recipient(email="a@example.com")],
+        subject="S",
+        body="   \n\t ",
+    )
+    assert DraftPolicy.is_complete(d) is False
+    with pytest.raises(DraftValidationError):
+        DraftPolicy.validate_required(d)
+
+
 def test_draftpolicy_validate_required_raises_on_missing() -> None:
     d = EmailDraft.create(recipients=[], subject="", body="")
     with pytest.raises(DraftValidationError):

@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel in-progress runs for the same ref.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint / Type / Test / Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies (incl. pinned dev toolchain)
+        run: uv sync --dev --locked
+
+      - name: Ruff lint
+        run: uv run ruff check src/ tests/
+
+      - name: Ruff format check
+        run: uv run ruff format --check src/ tests/
+
+      - name: Mypy (strict)
+        run: uv run mypy src/email_agent
+
+      - name: Pytest + coverage
+        run: uv run pytest --cov=email_agent --cov-report=json=coverage.json -q
+
+      - name: Per-layer coverage gate
+        run: uv run python scripts/check_coverage.py coverage.json
+
+  docker:
+    name: Docker build & test
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t email-agent .
+      - name: Run tests inside image
+        run: docker run --rm email-agent uv run pytest -q
+
+  secret-scan:
+    name: Gitleaks secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITLEAKS_CONFIG: .gitleaks.toml
+          # Scan the full history so a previously-committed secret is caught.
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
+
+  conventional-commits:
+    name: Conventional Commits
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Validate PR commits / title
+        uses: amannn/action-conventional-commits@v2
+        with:
+          # On pull_request, validates the PR title + commits.
+          # Merge/squash/revert auto-messages are allowed by the action + our hook.
+          token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,25 @@
+# Build/run artifacts
+.venv/
+.git/
+.gitignore
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+coverage.json
+
+# Secrets / local config (never image them)
+.env
+oauth_tokens.json
+.email-agent/
+
+# Genesis / docs (not needed to run tests)
+.genesis/
+docs/
+
+# Local tooling
+Dockerfile
+.dockerignore
+.github/
+scripts/
+*.md

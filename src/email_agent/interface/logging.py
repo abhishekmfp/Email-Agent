@@ -43,9 +43,7 @@ def mask_text(value: str | None) -> str | None:
     """Mask any embedded email addresses within a free-text value (prompt/body/subject)."""
     if not value:
         return value
-    return _EMAIL_RE.sub(
-        lambda m: f"{m.group(1)}***@{m.group(2)}", value
-    )
+    return _EMAIL_RE.sub(lambda m: f"{m.group(1)}***@{m.group(2)}", value)
 
 
 def mask_recipients(recipients: list[str] | tuple[str, ...]) -> list[str]:

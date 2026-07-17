@@ -61,11 +61,15 @@ def cmd_draft(args: argparse.Namespace) -> int:
         print(draft_to_dto(result.draft).model_dump_json())
         return 0
     if result.status.value == "CLARIFICATION_REQUIRED":
-        print(json.dumps({
-            "status": "CLARIFICATION_REQUIRED",
-            "clarification_question": result.clarification_question,
-            "missing_fields": result.missing_fields,
-        }))
+        print(
+            json.dumps(
+                {
+                    "status": "CLARIFICATION_REQUIRED",
+                    "clarification_question": result.clarification_question,
+                    "missing_fields": result.missing_fields,
+                }
+            )
+        )
         return 0
     raise ValidationError(result.error or "Draft request failed.")
 
@@ -106,11 +110,15 @@ def cmd_send(args: argparse.Namespace) -> int:
 
     if result.status == "SENT":
         safe_log("email_sent", message_id_masked=result.message_id)
-        print(json.dumps({
-            "status": "SENT",
-            "message_id": result.message_id,
-            "thread_id": result.thread_id,
-        }))
+        print(
+            json.dumps(
+                {
+                    "status": "SENT",
+                    "message_id": result.message_id,
+                    "thread_id": result.thread_id,
+                }
+            )
+        )
         return 0
     raise send_result_error(result)
 

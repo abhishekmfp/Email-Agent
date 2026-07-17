@@ -1,0 +1,41 @@
+# gitleaks configuration — M8 "no-secrets" CI gate.
+#
+# Enforces the secrets_hygiene invariant in CI (github action: gitleaks/gitleaks-action).
+# Runs against every PR. Local equivalent: `gitleaks detect --source . --no-banner`.
+#
+# Strategy:
+#   * Use gitleaks' built-in default detectors (entropy + provider regexes).
+#   * Exclude the test tree: tests intentionally contain OBVIOUSLY-FAKE tokens
+#     ("ya29.secret", "sk-123", "access-secret", ...) used to assert the
+#     logging/error masking works. These are not real secrets and must not fail CI.
+#   * Exclude .env.example (placeholder secrets, never real).
+#   * Exclude lockfiles / generated artifacts.
+
+title = "Email-Agent gitleaks config"
+
+[extend]
+# Inherit the upstream default rules.
+useDefault = true
+
+[allowlist]
+description = "Suppress obviously-fake test/example fixtures; real secrets must never match these."
+paths = [
+    '''.*/tests/.*''',
+    '''.*/\.env\.example''',
+    '''.*/uv\.lock''',
+    '''.*/\.coverage''',
+    '''.*/\.genesis/.*''',
+]
+
+[extend.path]
+# Explicit additional exclusions (mirror of allowlist above for clarity / tool compat).
+description = "Files/folders never scanned for secrets."
+[[extend.path.match]]
+# Test tree — fake tokens by design.
+pattern = '''tests/'''
+[[extend.path.match]]
+# Example/env templates — placeholders only.
+pattern = '''\.env\.example'''
+[[extend.path.match]]
+# Lockfile + caches + genesis state.
+pattern = '''(uv\.lock|\.coverage|\.genesis/|\.venv/)'''

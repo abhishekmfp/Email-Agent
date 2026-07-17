@@ -1,0 +1,19 @@
+# pre-commit configuration — M8 hardening (Q4, Python-native).
+# Local enforcement of the Conventional Commits gate. No Node/commitlint.
+#
+# Install (one time):  uv run pre-commit install --hook-type commit-msg
+# Run manually:       uv run pre-commit run --all-files
+#
+# CI enforces the same rule via amannn/action-conventional-commits
+# (see .github/workflows/ci.yml) so PRs are checked even if a contributor
+# skipped the local hook.
+repos:
+  - repo: local
+    hooks:
+      - id: conventional-commit
+        name: conventional commit message
+        entry: uv run python scripts/check_conventional_commit.py
+        language: system
+        stages: [commit-msg]
+        # pre-commit passes the commit-message temp file as the single arg.
+        args: ["{commit_msg_file}"]

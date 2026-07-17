@@ -70,9 +70,7 @@ def resolve_approver(request_approver: str | None, settings: Settings) -> str:
     config_name = settings.user.name
     if config_name and config_name.strip():
         return config_name.strip()
-    raise ValueError(
-        "No approver identity available: provide 'approver' or set APP_USER_NAME."
-    )
+    raise ValueError("No approver identity available: provide 'approver' or set APP_USER_NAME.")
 
 
 def build_draft_request(dto: object) -> DraftRequest:

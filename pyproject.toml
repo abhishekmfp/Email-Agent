@@ -83,6 +83,16 @@ dev = [
     "pytest>=8.2",
     # Coverage plugin — makes the test gate meaningful by measuring branch coverage.
     "pytest-cov>=5.0",
+    # pre-commit — M8 local Conventional-Commits hook (Python-native; no Node/commitlint).
+    "pre-commit==4.6.0",
+    # ── Pinned dev toolchain (M8 hardening) ──────────────────────────────────
+    # Exact pins make CI gates deterministic. Previously `ruff>=0.6` auto-upgraded
+    # to 0.15.x whose formatter re-wrapped M7 code, silently failing
+    # `ruff format --check`. Pinning freezes the gate.
+    "ruff==0.15.21",
+    "mypy==2.2.0",
+    "pytest==9.1.1",
+    "pytest-cov==7.1.0",
 ]
 
 # ── Tool configuration (repo is configured-for-dev out of the box) ────────────

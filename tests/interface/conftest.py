@@ -60,15 +60,40 @@ class FakeDeliveryService:
     def send(self, message: EmailMessage):
         self.last_message = message
         if self.fail_status == "auth_failed":
-            return type("R", (), {"success": False, "status": "auth_failed",
-                                  "error": "OAuth token refresh failed", "message_id": None,
-                                  "thread_id": None})()
+            return type(
+                "R",
+                (),
+                {
+                    "success": False,
+                    "status": "auth_failed",
+                    "error": "OAuth token refresh failed",
+                    "message_id": None,
+                    "thread_id": None,
+                },
+            )()
         if self.fail_status == "unknown_state":
-            return type("R", (), {"success": False, "status": "unknown_state",
-                                  "error": "Gmail returned 200 with unknown label",
-                                  "message_id": None, "thread_id": None})()
-        return type("R", (), {"success": True, "status": "delivered",
-                              "error": None, "message_id": "<msg-123>", "thread_id": "<th-9>"})()
+            return type(
+                "R",
+                (),
+                {
+                    "success": False,
+                    "status": "unknown_state",
+                    "error": "Gmail returned 200 with unknown label",
+                    "message_id": None,
+                    "thread_id": None,
+                },
+            )()
+        return type(
+            "R",
+            (),
+            {
+                "success": True,
+                "status": "delivered",
+                "error": None,
+                "message_id": "<msg-123>",
+                "thread_id": "<th-9>",
+            },
+        )()
 
 
 @pytest.fixture

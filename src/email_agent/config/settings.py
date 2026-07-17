@@ -146,7 +146,7 @@ class UserSettings(BaseSettings):
     """
 
     model_config = SettingsConfigDict(
-        env_prefix="APP_",
+        env_prefix="APP_USER_",
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
@@ -156,8 +156,9 @@ class UserSettings(BaseSettings):
     name: str = Field(
         default="",
         description="Local human identity used as the approver fallback (M7). "
-        "Empty by default; when empty and no request-supplied approver, Send fails "
-        "validation before ApproveEmailUseCase is invoked.",
+        "Loaded from APP_USER_NAME. Empty by default; when empty and no "
+        "request-supplied approver, Send fails validation before "
+        "ApproveEmailUseCase is invoked.",
     )
 
 

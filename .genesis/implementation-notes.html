@@ -34,13 +34,13 @@
   <p class="sub"><b>Rolling source of truth for what is LIVE right now.</b> The wiki can lag; this file
      cannot. Read this on every session start to avoid rebuilding what exists. This is your
      <i>git-like restart point</i>: if context is lost, this file rehydrates you.
-     Last updated: <code>2026-07-17</code> · by loop: <code>L4-verify-M6</code></p>
+     Last updated: <code>2026-07-17</code> · by loop: <code>L4-verify-M8</code></p>
 
   <!-- ───────────── ONE-LINE STATUS ───────────── -->
-  <div class="card wip">
-    <b>Now in flight:</b> M7 VERIFIED — Human Interface complete (FastAPI + CLI over M1-M6; SendEmailUseCase composes approve-then-deliver; L4 caught + fixed a secret-leak at the error envelope)<br>
-    <b>Active loop:</b> NONE · <b>Current milestone:</b> M8 (pending approval) · <b>Phase:</b> hardening<br>
-    <b>Blocked on:</b> none — M7 closed via L4 VERIFY (all 10 checks pass; 1 interface-layer defect fixed, regression test added)
+  <div class="card live">
+    <b>Now in flight:</b> M8 VERIFIED — Production Hardening complete (CI gate chain, pinned dev toolchain, per-layer coverage gate, gitleaks, Python-native Conventional Commits, Docker dev image, docs synced to M1-M7)<br>
+    <b>Active loop:</b> NONE · <b>Current milestone:</b> — (M8 closed) · <b>Phase:</b> hardening<br>
+    <b>Blocked on:</b> none — M8 closed via L4 VERIFY (7 invariants held, frozen M4/M6/M7 modules byte-identical, all gates green)
   </div>
 
   <!-- ───────────── WHAT'S LIVE ───────────── -->
@@ -59,6 +59,7 @@
         <tr><td>Gmail Delivery (M6)</td><td><code>gmail_adapter.py</code> (MIME+send, error class) · <code>delivery_service.py</code> (DeliveryResult, bounded pre-dispatch retry, refresh-before-every-send) · <code>gmail_errors.py</code> (+DeliveryError/PreDispatchTransportError/UnknownDeliveryStateError)</td><td><span class="pill live">live</span></td><td>ruff0/format0/mypy strict0/pytest0; gmail_errors 100% / delivery_service 98% / gmail_adapter 84%</td></tr>
         <tr><td>Human Interface (M7)</td><td><code>interface/api/__init__.py</code> (FastAPI: POST /draft /edit /send /reject, GET /health) · <code>interface/cli.py</code> (argparse mirror) · <code>interface/models.py</code> (pydantic DTOs) · <code>interface/translation.py</code> · <code>interface/errors.py</code> (envelope) · <code>interface/logging.py</code> (masked) · <code>interface/container.py</code> (startup DI)</td><td><span class="pill live">live</span></td><td>ruff 0, mypy strict 0, pytest 0; interface 82-100% / send_email_use_case 96%</td></tr>
         <tr><td>Send composition (M7)</td><td><code>application/send_email_use_case.py</code> · <code>SendEmailUseCase.execute(draft, decision)</code> orchestrates ApproveEmailUseCase + DeliveryService, returns <code>SendResult</code></td><td><span class="pill live">live</span></td><td>artifact_identity unit test (exact EmailMessage forwarded); L4 verified</td></tr>
+        <tr><td>Production Hardening (M8)</td><td><code>.github/workflows/ci.yml</code> (lint→format→mypy→pytest+coverage→coverage-gate→docker→gitleaks→conventional-commits) · <code>scripts/check_coverage.py</code> (per-layer floors) · <code>.gitleaks.toml</code> · <code>.pre-commit-config.yaml</code> + <code>scripts/check_conventional_commit.py</code> (Python-native, no Node) · <code>Dockerfile</code> (python:3.11-slim+uv, entrypoint <code>uv run pytest -q</code>) · <code>pyproject.toml</code>/<code>uv.lock</code> dev toolchain pinned · <code>.env.example</code> populated · <code>docs/ARCHITECTURE.md</code> + README synced to M1-M7</td><td><span class="pill live">live</span></td><td>L4 VERIFY: 7 invariants held, frozen M4/M6/M7 modules byte-identical, ruff 0 / format 0 / mypy 0 / pytest 0 (+1 win32 skip) / coverage floors met</td></tr>
       </tbody>
     </table>
     <p class="note">M2 L4 VERIFY passed (2026-07-15): ruff 0, ruff-format 0, mypy strict 0,
@@ -86,6 +87,9 @@
   <h2>Deviations from plan (append-only — the "why we didn't do it the obvious way" log)</h2>
   <div class="card">
     <p class="note">no deviations yet — append a row when a plan change occurs</p>
+    <ul>
+      <li><b>M8 (2026-07-17)</b> — During Task 6 (CI + toolchain pin) discovered the dev toolchain was unbounded; <code>ruff>=0.6</code> had auto-upgraded to 0.15.21 whose formatter re-wrapped 6 M7-era files, silently failing <code>ruff format --check</code>. Decision: pin the dev toolchain (ruff/mypy/pytest/pytest-cov/pre-commit) to exact versions in <code>uv.lock</code>, and apply <code>ruff format</code> to those 6 files (pure formatting, no behavior change, none were frozen modules). This is a hardening correction, not a scope expansion — it makes the new CI format gate deterministic. No frozen inner module was touched.</li>
+    </ul>
   </div>
 
   <!-- ───────────── KNOWN GAPS / NEXT ───────────── -->
@@ -104,7 +108,24 @@
   <!-- ───────────── SESSION LOG (append-only) ───────────── -->
   <h2>Session log (append-only, newest first)</h2>
   <div class="card">
-    <p><code>2026-07-17</code> — M7 L4 VERIFY APPROVED. Fresh-context review against the approved M7
+    <p><code>2026-07-17</code> — M8 L4 VERIFY APPROVED. Fresh-context review against the approved M8
+       Milestone Charter, the 7 context-graph invariants, and all frozen M1-M7 constraints. Verdict:
+       APPROVE. All 7 invariants held (domain_inward / approval_gate / llm_output_validated /
+       outbound_timeout / secrets_hygiene / artifact_identity / state_ownership). Frozen modules
+       (<code>domain/**</code>, the 5 application use cases, the 3 infra adapters, <code>interface/*</code>)
+       are byte-identical to the M7-verified tree (git diff vs HEAD empty). M8 scope respected: only
+       cross-cutting hardening artifacts + the approved Q1 config fix (UserSettings env prefix
+       <code>APP_</code>→<code>APP_USER_</code>) + the approved format-drift fix (6 M7-era files reformatted
+       under the now-pinned ruff). Legacy "OpenAI SDK" references reconciled to Anthropic/Gmail in
+       README; <code>docs/ARCHITECTURE.md</code> added capturing the verified layers + 7 invariants.
+       Gates green: ruff lint 0, ruff format 0 (59 files), mypy strict 0 (38 files), pytest 0
+       (1 win32 POSIX-skip), coverage floors met (domain 100 / application 99.2 / infrastructure 91.8 /
+       overall 93.6). gitleaks + docker build validated structurally (no binary/daemon on the Windows
+       host) and run in CI — the intended gate environment. Wiki seeding correctly excluded (separate
+       post-M8 Genesis task per user directive). DONE.html / PLAN.md untouched (locked-file rule).
+       Quiz-me Q&A logged (design: why pin the toolchain; edge: statement-weighted coverage misses
+       branch-only gaps; change-impact: <code>APP_USER_NAME</code> split needs no migration for dual-var
+       configs). CURRENT.md + checkpoints/M8.md + implementation-notes.html synced → <b>M8 VERIFIED</b>.</p>
        architecture, the Milestone Charter, and all frozen M3-M6 constraints. All 10 required
        checks pass (AC-UI-1; Translation Boundary — domain never crosses the wire; SendEmailUseCase
        orchestrates ApproveEmailUseCase + DeliveryService, builds no Approval, rebuilds no EmailMessage,

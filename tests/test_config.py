@@ -33,6 +33,23 @@ def test_settings_environment_override(monkeypatch: pytest.MonkeyPatch) -> None:
     assert settings.app_version == "9.9.9"
 
 
+def test_user_settings_distinct_env_prefix(monkeypatch: pytest.MonkeyPatch) -> None:
+    """UserSettings reads APP_USER_NAME, distinct from Settings.APP_NAME.
+
+    Locks the M8 fix: the human approver name must not collide with the
+    product name var. Setting APP_NAME must NOT bleed into settings.user.name.
+    """
+    monkeypatch.setenv("APP_USER_NAME", "Ada")
+    settings = Settings()
+    assert settings.user.name == "Ada"
+
+    monkeypatch.setenv("APP_NAME", "Product Name")
+    settings2 = Settings()
+    assert settings2.app_name == "Product Name"
+    # APP_NAME only names the product; it must not populate the approver name.
+    assert settings2.user.name == "Ada"
+
+
 def test_log_level_valid_normalized(monkeypatch: pytest.MonkeyPatch) -> None:
     """A valid lower-case log level is normalized to upper-case."""
     monkeypatch.setenv("LOG_LEVEL", "debug")
