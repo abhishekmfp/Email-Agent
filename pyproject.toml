@@ -36,27 +36,37 @@ dependencies = [
     # M5 concern handled by google-auth-oauthlib (below).
     "google-api-python-client>=2.140",
     # Pydantic v2 — the project's typed-data foundation.
-    # Why now, not later: (1) README lists it as core tech; (2) the M1 foundation
-    # establishes a base settings/config module (env loading, typed config) which
-    # is infrastructure, not business logic; (3) the DONE.html llmops gate requires
-    # "all structured/LLM outputs validated against a schema" — pydantic is the
-    # validator every later milestone (FastAPI models, OpenAI outputs, Gmail
-    # messages) depends on. Pinning it now locks the version the whole tree shares.
-    "google-auth-oauthlib>=1.4.0",
     "pydantic>=2.7",
     # pydantic-settings — runtime dependency of the config module
     # (src/email_agent/config/settings.py). Loads typed config from environment
     # variables and .env with validation on construction. Native .env support
     # means python-dotenv is not needed. Required for M1 Project Foundation.
     "pydantic-settings>=2.3",
+    # google-auth-oauthlib — M5 OAuth (PKCE public client). Required by
+    # GoogleOAuthClient; kept as a runtime dep (was present pre-M7).
+    "google-auth-oauthlib>=1.4.0",
+    # FastAPI — M7 interface layer (HTTP REST surface). The interface is a thin
+    # translation shell over the verified application use cases (no business
+    # logic), so FastAPI is an outer-layer dependency only.
+    "fastapi>=0.110",
+    # Uvicorn — ASGI server for the FastAPI app (M7 demo: uvicorn
+    # email_agent.main:app). Runtime dep so `uv run uvicorn` works out of the box.
+    "uvicorn>=0.29",
 ]
 
 [project.urls]
 Homepage = "https://github.com/<org>/email-agent"
 Repository = "https://github.com/<org>/email-agent"
 
+[project.scripts]
+email-agent = "email_agent.interface.cli:main"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/email_agent"]
+force-include = { "src/email_agent/py.typed" = "email_agent/py.typed" }
+
+[tool.hatch.build.targets.sdist]
+include = ["src/email_agent/py.typed"]
 
 # ── Development dependency groups (uv-managed, PEP 735) ───────────────────────
 [dependency-groups]

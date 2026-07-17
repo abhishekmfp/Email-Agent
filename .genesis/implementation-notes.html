@@ -38,9 +38,9 @@
 
   <!-- ───────────── ONE-LINE STATUS ───────────── -->
   <div class="card wip">
-    <b>Now in flight:</b> M6 VERIFIED — Gmail Delivery complete (GmailAdapter + DeliveryService, outbound_timeout fixed via httplib2.Http)<br>
-    <b>Active loop:</b> NONE · <b>Current milestone:</b> M7 (pending approval) · <b>Phase:</b> interface<br>
-    <b>Blocked on:</b> none — M6 closed via L4 VERIFY (REJECT→fixed→APPROVE)
+    <b>Now in flight:</b> M7 VERIFIED — Human Interface complete (FastAPI + CLI over M1-M6; SendEmailUseCase composes approve-then-deliver; L4 caught + fixed a secret-leak at the error envelope)<br>
+    <b>Active loop:</b> NONE · <b>Current milestone:</b> M8 (pending approval) · <b>Phase:</b> hardening<br>
+    <b>Blocked on:</b> none — M7 closed via L4 VERIFY (all 10 checks pass; 1 interface-layer defect fixed, regression test added)
   </div>
 
   <!-- ───────────── WHAT'S LIVE ───────────── -->
@@ -57,6 +57,8 @@
         <tr><td>Domain tests (M2)</td><td><code>tests/domain/test_domain.py</code></td><td><span class="pill live">live</span></td><td>43 passed</td></tr>
         <tr><td>Gmail OAuth (M5)</td><td><code>src/email_agent/infrastructure/google_oauth_client.py</code> · <code>OAuthTokenStore</code></td><td><span class="pill live">live</span></td><td>ruff/mypy/pytest green, 88% cov</td></tr>
         <tr><td>Gmail Delivery (M6)</td><td><code>gmail_adapter.py</code> (MIME+send, error class) · <code>delivery_service.py</code> (DeliveryResult, bounded pre-dispatch retry, refresh-before-every-send) · <code>gmail_errors.py</code> (+DeliveryError/PreDispatchTransportError/UnknownDeliveryStateError)</td><td><span class="pill live">live</span></td><td>ruff0/format0/mypy strict0/pytest0; gmail_errors 100% / delivery_service 98% / gmail_adapter 84%</td></tr>
+        <tr><td>Human Interface (M7)</td><td><code>interface/api/__init__.py</code> (FastAPI: POST /draft /edit /send /reject, GET /health) · <code>interface/cli.py</code> (argparse mirror) · <code>interface/models.py</code> (pydantic DTOs) · <code>interface/translation.py</code> · <code>interface/errors.py</code> (envelope) · <code>interface/logging.py</code> (masked) · <code>interface/container.py</code> (startup DI)</td><td><span class="pill live">live</span></td><td>ruff 0, mypy strict 0, pytest 0; interface 82-100% / send_email_use_case 96%</td></tr>
+        <tr><td>Send composition (M7)</td><td><code>application/send_email_use_case.py</code> · <code>SendEmailUseCase.execute(draft, decision)</code> orchestrates ApproveEmailUseCase + DeliveryService, returns <code>SendResult</code></td><td><span class="pill live">live</span></td><td>artifact_identity unit test (exact EmailMessage forwarded); L4 verified</td></tr>
       </tbody>
     </table>
     <p class="note">M2 L4 VERIFY passed (2026-07-15): ruff 0, ruff-format 0, mypy strict 0,
@@ -102,6 +104,19 @@
   <!-- ───────────── SESSION LOG (append-only) ───────────── -->
   <h2>Session log (append-only, newest first)</h2>
   <div class="card">
+    <p><code>2026-07-17</code> — M7 L4 VERIFY APPROVED. Fresh-context review against the approved M7
+       architecture, the Milestone Charter, and all frozen M3-M6 constraints. All 10 required
+       checks pass (AC-UI-1; Translation Boundary — domain never crosses the wire; SendEmailUseCase
+       orchestrates ApproveEmailUseCase + DeliveryService, builds no Approval, rebuilds no EmailMessage,
+       preserves artifact_identity; M4/M6 byte-for-byte unchanged; stateless; B3 approver precedence;
+       interface-owned error envelope; masked logging; /health = {status,version}; no regression).
+       One defect found and fixed at the interface boundary only: <code>send_result_error</code> AUTH_FAILED
+       branch forwarded the upstream delivery error text (could carry token/account hints) — now uses a
+       fixed message; regression test added (<code>test_send_result_error_auth_failed_does_not_leak_upstream_error</code>).
+       M4/M6 untouched. PLAN.md §G0.5 "ApproveAndSend" reconciled to "SendEmailUseCase"; context-graph.json
+       already reflects SendEmailUseCase. DONE.html §3, CURRENT.md, implementation-notes.html updated →
+       <b>M7 VERIFIED</b>. Gates green: ruff 0, mypy strict 0 (38 files), pytest 0 (1 POSIX skip), total cov 91%.
+       M8 (Production Hardening) pending approval; not begun.</p>
     <p><code>2026-07-17</code> — M6 L4 VERIFY: first pass REJECT (fresh-context reviewer) on
        outbound_timeout — <code>googleapiclient</code>'s <code>send()</code>/<code>execute()</code> reject a
        <code>timeout</code> kwarg; it was silently swallowed into PreDispatchTransportError so production

@@ -16,6 +16,7 @@ from .approve_email_use_case import ApproveEmailUseCase
 from .draft_email_use_case import DraftEmailUseCase
 from .draft_request import DraftRequest, DraftResult, DraftStatus
 from .drafting_service import DraftingService
+from .send_email_use_case import SendEmailUseCase, SendResult
 
 __all__ = [
     "ApprovalDecision",
@@ -27,4 +28,6 @@ __all__ = [
     "DraftResult",
     "DraftStatus",
     "DraftingService",
+    "SendEmailUseCase",
+    "SendResult",
 ]

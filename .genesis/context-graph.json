@@ -7,7 +7,7 @@
     "interface": ["FastAPIInterface", "CLIInterface"],
     "application": [
       "DraftEmailUseCase", "ApproveEmailUseCase",
-      "DraftingService", "DeliveryService"
+      "DraftingService", "DeliveryService", "SendEmailUseCase"
     ],
     "domain": [
       "EmailDraft", "Approval", "Recipient", "DraftPolicy", "EmailMessage"
@@ -28,8 +28,12 @@
       "role": "Orchestrates request -> DraftingService -> returns preview in PENDING state. Thin; no business rules.",
       "depends_on": ["DraftingService", "EmailDraft", "Approval", "DraftPolicy"] },
     { "id": "ApproveEmailUseCase", "layer": "application",
-      "role": "Handles explicit human approval; only if domain Approval is valid does it convert the approved EmailDraft to an EmailMessage and invoke DeliveryService. Thin.",
-      "depends_on": ["DeliveryService", "EmailDraft", "EmailMessage", "Approval", "DraftPolicy"] },
+      "role": "Handles explicit human approval; only if domain Approval is valid does it convert the approved EmailDraft to an immutable EmailMessage and RETURN it (no Gmail/send). Thin; LLM-free. (CORRECTION: an earlier graph draft incorrectly listed ApproveEmailUseCase -> DeliveryService; the verified M4 module returns EmailMessage and stops. The approve-then-deliver composition is owned by SendEmailUseCase.)",
+      "depends_on": ["EmailDraft", "EmailMessage", "Approval", "DraftPolicy"] },
+
+    { "id": "SendEmailUseCase", "layer": "application",
+      "role": "Orchestrates approve-then-deliver: invokes ApproveEmailUseCase (M4) to obtain the immutable EmailMessage, then DeliveryService (M6) to send that EXACT instance. Single application-layer owner of the send composition; the interface delegates /send to exactly this use case (AC-UI-1). Builds no Approval; rebuilds no EmailMessage.",
+      "depends_on": ["ApproveEmailUseCase", "DeliveryService", "EmailDraft", "EmailMessage", "Approval"] },
 
     { "id": "DraftingService", "layer": "application",
       "role": "Coordinates request -> AnthropicAdapter -> DraftValidator -> domain validation -> lifecycle transition to AWAIT_APPROVAL.",
@@ -79,7 +83,8 @@
     ["DraftEmailUseCase", "EmailDraft"],
     ["DraftEmailUseCase", "Approval"],
     ["DraftEmailUseCase", "DraftPolicy"],
-    ["ApproveEmailUseCase", "DeliveryService"],
+    ["SendEmailUseCase", "ApproveEmailUseCase"],
+    ["SendEmailUseCase", "DeliveryService"],
     ["ApproveEmailUseCase", "EmailDraft"],
     ["ApproveEmailUseCase", "EmailMessage"],
     ["ApproveEmailUseCase", "Approval"],
@@ -96,7 +101,7 @@
   ],
   "invariants": {
     "domain_inward": "Domain layer (EmailDraft, Approval, Recipient, DraftPolicy, EmailMessage) imports no infrastructure and no framework (no FastAPI, no Anthropic SDK, no Gmail SDK). Dependency direction is always inward.",
-    "approval_gate": "No email reaches Gmail without an explicit deterministic Approval in the APPROVED state. GmailAdapter is only invoked from DeliveryService, which is only called by ApproveEmailUseCase after Approval is valid.",
+    "approval_gate": "No email reaches Gmail without an explicit deterministic Approval in the APPROVED state. GmailAdapter is only invoked from DeliveryService, which is only called by SendEmailUseCase after ApproveEmailUseCase returns a valid APPROVED EmailMessage.",
     "llm_output_validated": "AnthropicAdapter returns structured data only. DraftValidator (application/infrastructure boundary) validates every LLM output before the application creates or updates an EmailDraft.",
     "outbound_timeout": "Every outbound network call (AnthropicAdapter, GmailAdapter) has an explicit timeout value.",
     "secrets_hygiene": "Secrets (LLM key, OAuth tokens) never enter prompts and never enter logs. Secrets are withheld from the LLM by data minimization.",

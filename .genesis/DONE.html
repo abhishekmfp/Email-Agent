@@ -101,7 +101,7 @@
         <tr><td>M4</td><td>Approval &amp; EmailMessage</td><td>domain + application</td><td><code>uv run pytest tests/application -q</code></td><td>L1, L4</td><td><span class="pill done">VERIFIED</span></td></tr>
         <tr><td>M5</td><td>Gmail OAuth Authentication</td><td>integration (auth)</td><td><code>uv run pytest tests/infrastructure -q</code></td><td>L1, L4</td><td><span class="pill done">VERIFIED</span></td></tr>
         <tr><td>M6</td><td>Gmail Delivery</td><td>integration (delivery)</td><td><code>uv run pytest tests/infrastructure tests/application -q</code></td><td>L1, L4</td><td><span class="pill done">VERIFIED</span></td></tr>
-        <tr><td>M7</td><td>Interface &amp; Observability</td><td>interface</td><td><code>uv run uvicorn email_agent.interface.api:app --port 8000</code> → <code>curl -s localhost:8000/health</code></td><td>L1, L4</td><td><span class="pill">todo</span></td></tr>
+        <tr><td>M7</td><td>Interface &amp; Observability</td><td>interface</td><td><code>uv run uvicorn email_agent.interface.api:app --port 8000</code> → <code>curl -s localhost:8000/health</code></td><td>L1, L4</td><td><span class="pill done">VERIFIED</span></td></tr>
         <tr><td>M8</td><td>Production Hardening</td><td>hardening</td><td><code>docker build -t email-agent . &amp;&amp; docker run --rm email-agent uv run pytest -q</code></td><td>L1, L4</td><td><span class="pill">todo</span></td></tr>
       </tbody>
     </table>

@@ -1,10 +1,9 @@
 """Application bootstrap for Email-Agent.
 
-Milestone M1 — Project Foundation only. This module establishes the
-application entry point and confirms the project starts successfully. It
-contains NO application features, business logic, configuration loading,
-or external integrations (FastAPI / OpenAI / Gmail). Those are deferred
-to later milestones.
+Milestone M1 — Project Foundation established the entry point. M7 adds the
+FastAPI ``app`` object (built by the interface layer) for ``uvicorn
+email_agent.main:app`` and preserves the ``main()`` bootstrap for the CLI/script
+path. The CLI entry point itself lives in ``email_agent.interface.cli``.
 """
 
 from __future__ import annotations
@@ -12,10 +11,27 @@ from __future__ import annotations
 import logging
 import sys
 
+from fastapi import FastAPI
+
 logger = logging.getLogger(__name__)
 
 # Exact startup banner required by the M1 bootstrap spec.
 STARTUP_MESSAGE = " Email-Agent started successfully"
+
+# FastAPI application, constructed lazily so importing this module does not
+# trigger heavy dependency construction at import time (tests import ``app`` on
+# demand). Built once at process start by the ASGI server / first access.
+app = None
+
+
+def get_app() -> FastAPI:
+    """Construct and cache the FastAPI app (dependency graph built once)."""
+    global app
+    if app is None:
+        from email_agent.interface.api import create_app
+
+        app = create_app()
+    return app
 
 
 def configure_logging() -> None:

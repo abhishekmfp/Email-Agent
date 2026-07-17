@@ -20,6 +20,8 @@ from functools import lru_cache
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from email_agent import __version__
+
 # Canonical set of accepted environment names. Kept as a module constant so
 # the validator message and future code share one source of truth.
 _ALLOWED_ENVIRONMENTS = frozenset({"development", "staging", "production", "test"})
@@ -109,6 +111,15 @@ class GmailSettings(BaseSettings):
         description="Space-separated Gmail scopes requested at consent. M5 requests only "
         "gmail.send (decision D4); delivery itself is M6.",
     )
+    # Authenticated account send address. Sourced from config (never the draft) per
+    # the Gmail trust boundary; used as the MIME From header by GmailAdapter. M7 adds
+    # this field so the interface DI can supply a real value (empty default keeps
+    # tests/mocked runs functional — they inject a fake adapter).
+    from_address: str = Field(
+        default="",
+        description="Authenticated account send address for the MIME From header. "
+        "Set via GMAIL_FROM_ADDRESS; GmailAdapter never derives it from the draft.",
+    )
     request_timeout_seconds: float = Field(
         default=30.0,
         gt=0,
@@ -120,6 +131,33 @@ class GmailSettings(BaseSettings):
         gt=0,
         description="Hard timeout (seconds) for a single Gmail send (users.messages.send) "
         "request. Enforces the outbound_timeout invariant on the delivery path (M6).",
+    )
+
+
+class UserSettings(BaseSettings):
+    """Local human identity (Milestone M7).
+
+    Minimal typed section backing the interface-layer approver resolution
+    (B3 precedence: request-supplied approver → settings.user.name → fail).
+    Deliberately scoped to just ``name`` — no signature/title/email/preferences
+    in M7. Follows the sectioned + validated pattern of ``AnthropicSettings`` /
+    ``GmailSettings``; ``app_name`` is NOT reused because it names the product,
+    not a human.
+    """
+
+    model_config = SettingsConfigDict(
+        env_prefix="APP_",
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",
+    )
+
+    name: str = Field(
+        default="",
+        description="Local human identity used as the approver fallback (M7). "
+        "Empty by default; when empty and no request-supplied approver, Send fails "
+        "validation before ApproveEmailUseCase is invoked.",
     )
 
 
@@ -144,8 +182,10 @@ class Settings(BaseSettings):
         description="Human-readable application name.",
     )
     app_version: str = Field(
-        default="0.1.0",
-        description="Application version (semver). Keep in sync with pyproject.toml.",
+        default=__version__,
+        description="Application version (semver). Single source of truth is "
+        "email_agent.__version__; this field mirrors it so GET /health and config "
+        "report one canonical version (M7 decision #2).",
     )
     log_level: str = Field(
         default="INFO",
@@ -161,6 +201,7 @@ class Settings(BaseSettings):
     #: config testable and avoids surprising reads during import.
     anthropic: AnthropicSettings = Field(default_factory=AnthropicSettings)
     gmail: GmailSettings = Field(default_factory=GmailSettings)
+    user: UserSettings = Field(default_factory=UserSettings)
 
     @field_validator("log_level")
     @classmethod

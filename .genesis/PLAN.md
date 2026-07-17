@@ -18,7 +18,7 @@ human/visual view; this is the one loops read). Sliced so each milestone ships i
 Four layers (Interface → Application → Domain → Infrastructure adapters), dependency
 direction inward (DIP). Domain imports nothing (no FastAPI, no Anthropic SDK, no Gmail
 SDK). LLM and Email providers sit behind concrete adapters. HITL is two application use
-cases (DraftEmail, ApproveAndSend) plus a domain Approval value object; the LLM never
+cases (DraftEmail, SendEmailUseCase) plus a domain Approval value object; the LLM never
 touches send.
 - Strengths: maps 1:1 onto the locked invariants; provider isolation is natural; canonical
   "production reference" shape; HITL is a deterministic boundary.
@@ -51,7 +51,7 @@ stays non-terminal so the human verifies before retry.
   (sufficient for a single local user with minimal retention). This captures C's safety
   property — send only from `APPROVED`; an uncertain delivery outcome stays non-terminal —
   without C's machinery.
-- **Application layer stays thin:** it orchestrates use cases (DraftEmail, ApproveAndSend)
+- **Application layer stays thin:** it orchestrates use cases (DraftEmail, SendEmailUseCase)
   and delegates to services/domain; it does NOT contain business rules.
 - **Introduce two services in the Application layer:**
   - `DraftGenerationService` — coordinates request → LLM adapter → structured draft →

@@ -9,13 +9,15 @@
 - m4_status: VERIFIED (L4 pass)
 - m5_status: VERIFIED (L4 pass)
 - m6_status: VERIFIED (L4 pass — REJECT→fixed→APPROVE)
+- m7_status: VERIFIED (L4 pass — Option γ SendEmailUseCase; secret-leak fix in interface/errors.py, M4/M6 untouched)
 - m6_evo_items: (locked X1-X5 in checkpoints/M6.md — carry forward as M7 freeze constraints: exact EmailMessage instance delivered [artifact_identity]; refresh_if_needed before every send; TokenRefreshError = hard stop + re-auth, deliver SAME EmailMessage; retry pre-dispatch only, never resend on UnknownDeliveryState; send_timeout on httplib2.Http transport (NOT a send() kwarg); MIME stays in GmailAdapter, no MimeMessageBuilder; SENT owned by caller via DeliveryResult [D-M6-1 Option a])
 - m5_evo_items: (locked D1-D7 + X1-X3 in checkpoints/M5.md — carry forward: PKCE public client; tokens outside repo 0600 gitignored; gmail.send scope; GoogleOAuthClient owns OAuth ops; OAuthTokenStore.has_valid_tokens; M6 must call refresh_if_needed before every send + TokenRefreshError = hard stop + re-auth + deliver SAME EmailMessage)
 - m4_evo_items: (locked E1-E4 in checkpoints/M4.md — carry forward: only ApproveEmailUseCase builds Approval; EmailMessage created once at approve; M6 must deliver the exact EmailMessage instance, never rebuild from draft)
 - m3_evo_items: (locked ADRs 1-7 in checkpoints/M3.md — carry forward verbatim)
 - m2_evo_items: RFC email validation→infra; approval identity may become persistent; decided_at may become mandatory on audit; drop mypy type-ignore if cleaner narrowing found
-- last_action: M6 L4 VERIFY APPROVED after fixing outbound_timeout blocker (timeout moved to httplib2.Http transport; refresh_if_needed now inside retry loop per M5→M6 contract); marked VERIFIED
-- next_action: await approval to begin M7 (Interface & Observability) — do NOT begin M7 until approved
+- m7_evo_items: (locked M7 decisions 1-8 in checkpoints/M7.md §9.6 + §13 — carry forward: SendEmailUseCase (Option γ) owns approve-then-deliver composition; AC-UI-1 (one endpoint→one use case); Translation Boundary (DTOs only, domain never crosses wire); B3 approver precedence request→settings.user.name→fail; error envelope {code,message,detail?} interface-owned; AUTH_FAILED uses fixed message (no token/account leak); secrets masked in logs; stateless (client holds DraftResponseDTO); M4/M6 frozen)
+- last_action: M7 L4 VERIFY APPROVED after fresh-context review: all 10 checks pass; one defect fixed (interface/errors.py AUTH_FAILED no longer forwards upstream error text, regression test added; M4/M6 untouched); marked VERIFIED
+- next_action: M7 VERIFIED — proceed to M8 (Production Hardening) only after explicit approval
 - model: builder
 - tokens_used: 0
 - tokens_budget: 50000
