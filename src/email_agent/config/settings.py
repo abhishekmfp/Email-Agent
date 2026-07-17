@@ -115,6 +115,12 @@ class GmailSettings(BaseSettings):
         description="Hard timeout (seconds) for a single token-endpoint request. Enforces "
         "the outbound_timeout invariant.",
     )
+    send_timeout_seconds: float = Field(
+        default=30.0,
+        gt=0,
+        description="Hard timeout (seconds) for a single Gmail send (users.messages.send) "
+        "request. Enforces the outbound_timeout invariant on the delivery path (M6).",
+    )
 
 
 class Settings(BaseSettings):

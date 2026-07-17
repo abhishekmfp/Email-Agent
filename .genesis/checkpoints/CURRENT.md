@@ -1,21 +1,21 @@
 # CURRENT
 - active_loop: NONE
-- target: M6
+- target: M7
 - iteration: 0
-- last_gate: L4 (VERIFY) — M5 verdict: APPROVE / VERIFIED (post-fix)
+- last_gate: L4 (VERIFY) — M6 verdict: APPROVE / VERIFIED (post-fix)
 - m1_status: VERIFIED (L4 pass)
 - m2_status: VERIFIED (L4 pass)
 - m3_status: VERIFIED (L4 pass)
 - m4_status: VERIFIED (L4 pass)
 - m5_status: VERIFIED (L4 pass)
-- m5_l4_quiz: design=desktop is public client, PKCE removes secret need, extracted secret only impersonates app identity not user access; edge=revoked refresh → TokenRefreshError + store clear, EmailMessage stays immutable, M6 hard-stops & re-auths; impact=M6 calls refresh_if_needed before every send, transparent on expiry, hard stop on TokenRefreshError
-- m5_artifacts: GoogleOAuthClient (PKCE URL, exchange, timed refresh, refresh_if_needed, full interactive authenticate), OAuthTokenStore (has_valid_tokens, 0600), gmail_errors (OAuthError/TokenRefreshError), GmailSettings; tests: test_google_oauth_client.py (16), test_oauth_token_store.py
-- m5_evo_items: (locked D1-D7 + X1-X3 in checkpoints/M5.md — carry forward as M6 freeze constraints: PKCE public client; tokens outside repo 0600 gitignored; gmail.send scope; GoogleOAuthClient owns OAuth ops; OAuthTokenStore.has_valid_tokens; no DeliveryService/send in M5; M6 must call refresh_if_needed before every send + TokenRefreshError = hard stop + re-auth + deliver SAME EmailMessage)
-- m4_evo_items: (locked E1-E4 in checkpoints/M4.md — carry forward as M6 freeze constraints: only ApproveEmailUseCase builds Approval; EmailMessage created once at approve; M6 must deliver the exact EmailMessage instance, never rebuild from draft)
-- m3_evo_items: (locked ADRs 1-7 in checkpoints/M3.md — carry forward verbatim as M6+ freeze constraints)
+- m6_status: VERIFIED (L4 pass — REJECT→fixed→APPROVE)
+- m6_evo_items: (locked X1-X5 in checkpoints/M6.md — carry forward as M7 freeze constraints: exact EmailMessage instance delivered [artifact_identity]; refresh_if_needed before every send; TokenRefreshError = hard stop + re-auth, deliver SAME EmailMessage; retry pre-dispatch only, never resend on UnknownDeliveryState; send_timeout on httplib2.Http transport (NOT a send() kwarg); MIME stays in GmailAdapter, no MimeMessageBuilder; SENT owned by caller via DeliveryResult [D-M6-1 Option a])
+- m5_evo_items: (locked D1-D7 + X1-X3 in checkpoints/M5.md — carry forward: PKCE public client; tokens outside repo 0600 gitignored; gmail.send scope; GoogleOAuthClient owns OAuth ops; OAuthTokenStore.has_valid_tokens; M6 must call refresh_if_needed before every send + TokenRefreshError = hard stop + re-auth + deliver SAME EmailMessage)
+- m4_evo_items: (locked E1-E4 in checkpoints/M4.md — carry forward: only ApproveEmailUseCase builds Approval; EmailMessage created once at approve; M6 must deliver the exact EmailMessage instance, never rebuild from draft)
+- m3_evo_items: (locked ADRs 1-7 in checkpoints/M3.md — carry forward verbatim)
 - m2_evo_items: RFC email validation→infra; approval identity may become persistent; decided_at may become mandatory on audit; drop mypy type-ignore if cleaner narrowing found
-- last_action: M5 L4 VERIFY passed after fixing refresh-path timeout (outbound_timeout); marked VERIFIED
-- next_action: await approval to begin M6 (Gmail Delivery / send only) — do NOT begin M6 until approved
+- last_action: M6 L4 VERIFY APPROVED after fixing outbound_timeout blocker (timeout moved to httplib2.Http transport; refresh_if_needed now inside retry loop per M5→M6 contract); marked VERIFIED
+- next_action: await approval to begin M7 (Interface & Observability) — do NOT begin M7 until approved
 - model: builder
 - tokens_used: 0
 - tokens_budget: 50000

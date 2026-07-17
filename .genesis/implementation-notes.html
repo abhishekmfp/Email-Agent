@@ -34,13 +34,13 @@
   <p class="sub"><b>Rolling source of truth for what is LIVE right now.</b> The wiki can lag; this file
      cannot. Read this on every session start to avoid rebuilding what exists. This is your
      <i>git-like restart point</i>: if context is lost, this file rehydrates you.
-     Last updated: <code>2026-07-15</code> · by loop: <code>L4-verify-M1</code></p>
+     Last updated: <code>2026-07-17</code> · by loop: <code>L4-verify-M6</code></p>
 
   <!-- ───────────── ONE-LINE STATUS ───────────── -->
   <div class="card wip">
-    <b>Now in flight:</b> M2 VERIFIED — Domain Model complete; ready for M3 (Anthropic Drafting)<br>
-    <b>Active loop:</b> NONE · <b>Current milestone:</b> M3 (pending approval) · <b>Phase:</b> integration (LLM)<br>
-    <b>Blocked on:</b> none — M2 closed via L4 VERIFY (quiz-me: design/invariants/stability all confirmed)
+    <b>Now in flight:</b> M6 VERIFIED — Gmail Delivery complete (GmailAdapter + DeliveryService, outbound_timeout fixed via httplib2.Http)<br>
+    <b>Active loop:</b> NONE · <b>Current milestone:</b> M7 (pending approval) · <b>Phase:</b> interface<br>
+    <b>Blocked on:</b> none — M6 closed via L4 VERIFY (REJECT→fixed→APPROVE)
   </div>
 
   <!-- ───────────── WHAT'S LIVE ───────────── -->
@@ -55,6 +55,8 @@
         <tr><td>Smoke tests (M1 freeze)</td><td><code>tests/test_main.py</code> · <code>tests/test_config.py</code></td><td><span class="pill live">live</span></td><td>pytest 9 passed, exit 0</td></tr>
         <tr><td>Domain layer (M2)</td><td><code>src/email_agent/domain/**</code></td><td><span class="pill live">live</span></td><td>ruff/mypy/pytest green, 99% cov</td></tr>
         <tr><td>Domain tests (M2)</td><td><code>tests/domain/test_domain.py</code></td><td><span class="pill live">live</span></td><td>43 passed</td></tr>
+        <tr><td>Gmail OAuth (M5)</td><td><code>src/email_agent/infrastructure/google_oauth_client.py</code> · <code>OAuthTokenStore</code></td><td><span class="pill live">live</span></td><td>ruff/mypy/pytest green, 88% cov</td></tr>
+        <tr><td>Gmail Delivery (M6)</td><td><code>gmail_adapter.py</code> (MIME+send, error class) · <code>delivery_service.py</code> (DeliveryResult, bounded pre-dispatch retry, refresh-before-every-send) · <code>gmail_errors.py</code> (+DeliveryError/PreDispatchTransportError/UnknownDeliveryStateError)</td><td><span class="pill live">live</span></td><td>ruff0/format0/mypy strict0/pytest0; gmail_errors 100% / delivery_service 98% / gmail_adapter 84%</td></tr>
       </tbody>
     </table>
     <p class="note">M2 L4 VERIFY passed (2026-07-15): ruff 0, ruff-format 0, mypy strict 0,
@@ -100,6 +102,17 @@
   <!-- ───────────── SESSION LOG (append-only) ───────────── -->
   <h2>Session log (append-only, newest first)</h2>
   <div class="card">
+    <p><code>2026-07-17</code> — M6 L4 VERIFY: first pass REJECT (fresh-context reviewer) on
+       outbound_timeout — <code>googleapiclient</code>'s <code>send()</code>/<code>execute()</code> reject a
+       <code>timeout</code> kwarg; it was silently swallowed into PreDispatchTransportError so production
+       send always failed AND no socket timeout was applied. Same invariant that sank M5 L4.
+       Fix: timeout moved onto <code>httplib2.Http(timeout=...)</code> → <code>build(http=...)</code>;
+       added <code>test_real_service_builds_request_with_timeout_applied</code> (builds a real Gmail
+       request, no network, asserts no TypeError + timeout reaches transport). Reviewer's 2nd flag
+       (refresh-before-every-request) fixed: <code>refresh_if_needed()</code> moved inside the retry
+       loop. Re-run gates green: ruff 0, ruff-format 0, mypy strict 0 (29 files), pytest 0
+       (1 win32 POSIX-skip). Second pass APPROVE → <b>M6 VERIFIED</b>. DONE.html §3, CURRENT.md,
+       checkpoints/M6.md updated. M7 (Interface & Observability) pending approval; not begun.</p>
     <p><code>2026-07-15</code> — M2 L4 VERIFY passed. Re-ran gates (all green): ruff check 0,
        ruff format 0, mypy strict 0, pytest 0 (43 passed), domain cov 99%. Quiz-me segment: Q1 design
        match (confirmed via earlier review approval), Q2 invariants a/b/c enforced (confirmed), Q3

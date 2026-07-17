@@ -31,6 +31,10 @@ classifiers = [
 # milestone that actually uses it — see "Deferred dependencies" below.
 dependencies = [
     "anthropic>=0.116.0",
+    # Gmail API client — Milestone M6 (delivery only). Used solely by
+    # GmailAdapter to send the approved EmailMessage; OAuth itself remains an
+    # M5 concern handled by google-auth-oauthlib (below).
+    "google-api-python-client>=2.140",
     # Pydantic v2 — the project's typed-data foundation.
     # Why now, not later: (1) README lists it as core tech; (2) the M1 foundation
     # establishes a base settings/config module (env loading, typed config) which
